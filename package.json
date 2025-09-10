@@ -15,7 +15,7 @@
     "commands": [
       {
         "command": "codeflow-ai.helloWorld",
-        "title": "Hello World"
+        "title": "Type here"
       }
     ]
   },
