@@ -14,6 +14,41 @@ export class BackendServices {
         this.isEnabled = config.get('cloudSync', false);
     }
 
+    public async syncData(insight: ProductivityInsight, progress: UserProgress): Promise<boolean> {
+        if (!this.isEnabled) {
+            return false;
+        }
+        try {
+            // Get user identifier (you would implement proper authentication in a real extension)
+            const userId = await this.getUserId();
+            // Prepare data for sync
+            const syncData = {
+                userId,
+                timestamp: Date.now(),
+                insight,
+                progress
+            };
+            // Send data to backend
+            const response = await fetch(`${this.apiEndpoint}/sync`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${await this.getAuthToken()}`
+                },
+                body: JSON.stringify(syncData)
+            });
+            if (response.ok) {
+                console.log('Data synced successfully');
+                return true;
+            } else {
+                console.error('Failed to sync data:', response.statusText);
+                return false;
+            }
+        } catch (error) {
+            console.error('Error syncing data:', error);
+            return false;
+        }
+    }
 
     public async getTeamInsights(teamId: string): Promise<any> {
         if (!this.isEnabled) {
