@@ -72,7 +72,18 @@ export class BackendServices {
         }
     }
 
-    
+    private async getUserId(): Promise<string> {
+        // In a real implementation, you would get this from authentication
+        // For now, we'll use a machine ID
+        const storage = this.context.globalState;
+        let userId = storage.get<string>('codeflow-userId');
+        if (!userId) {
+            // Generate a random ID
+            userId = 'user-' + Math.random().toString(36).substr(2, 9);
+            await storage.update('codeflow-userId', userId);
+        }
+        return userId;
+    }
 
     private async getAuthToken(): Promise<string> {
         // In a real implementation, you would implement OAuth or similar
