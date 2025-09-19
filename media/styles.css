@@ -75,3 +75,54 @@ h1 {
     border-bottom: 1px solid #eee;
     padding-bottom: 10px;
 }
+
+.chart-container {
+    height: 250px;
+}
+
+.suggestions ul {
+    padding-left: 20px;
+}
+
+.suggestions li {
+    margin-bottom: 10px;
+    line-height: 1.5;
+}
+
+.badges-section {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.badges-section h2 {
+    margin-top: 0;
+    color: #333;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+}
+
+.badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.badge {
+    width: 150px;
+    text-align: center;
+    padding: 15px;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    border: 2px solid #eee;
+    opacity: 0.5;
+    transition: all 0.3s ease;
+}
+
+.badge.earned {
+    opacity: 1;
+    border-color: #007acc;
+    background-color: #f0f8ff;
+}
+
