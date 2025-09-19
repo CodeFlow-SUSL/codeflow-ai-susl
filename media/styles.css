@@ -25,3 +25,33 @@ h1 {
     margin: 0;
     color: #007acc;
 }
+
+.productivity-score {
+    display: flex;
+    align-items: center;
+}
+
+.score-circle {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: linear-gradient(45deg, #007acc, #00a2ff);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.score-value {
+    font-size: 28px;
+    font-weight: bold;
+    margin: 0;
+}
+
+.score-label {
+    font-size: 12px;
+    margin: 0;
+}
+
