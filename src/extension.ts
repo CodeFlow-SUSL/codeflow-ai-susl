@@ -111,8 +111,21 @@ export function activate(context: vscode.ExtensionContext) {
         }
     });
 
+	// Register status bar item
+    const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
+    statusBarItem.text = "$(chart-line) CodeFlow";
+    statusBarItem.tooltip = "Show CodeFlow Report";
+    statusBarItem.command = 'codeflow.showReport';
+    statusBarItem.show();
+
     // Add to subscriptions
-    context.subscriptions.push(showReportCommand, toggleTrackingCommand, showBadgesCommand, enableCloudSyncCommand, configureAPICommand);
+    context.subscriptions.push(showReportCommand, toggleTrackingCommand, showBadgesCommand, enableCloudSyncCommand, configureAPICommand, statusBarItem);
+
+	// Check for new badges periodically
+    setInterval(() => {
+        const activities = gamificationSystem.getActivitiesForLastWeek();
+        gamificationSystem.checkForNewBadges(activities);
+    }, 60000 * 60); // Check every hour
 }
 
 export function deactivate() {
