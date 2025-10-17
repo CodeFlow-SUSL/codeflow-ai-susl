@@ -63,8 +63,56 @@ export function activate(context: vscode.ExtensionContext) {
         });
     });
 
+	const enableCloudSyncCommand = vscode.commands.registerCommand('codeflow.enableCloudSync', async () => {
+        try {
+            await backendServices.authenticate();
+            vscode.window.showInformationMessage('Cloud sync enabled successfully!');
+        } catch (error) {
+            vscode.window.showErrorMessage(`Failed to enable cloud sync: ${error}`);
+        }
+    });
+
+	const configureAPICommand = vscode.commands.registerCommand('codeflow.configureAPI', async () => {
+        const config = vscode.workspace.getConfiguration('codeflow');
+        
+        // Ask for API endpoint
+        const endpoint = await vscode.window.showInputBox({
+            prompt: 'Enter the API endpoint for AI analysis',
+            value: config.get('apiEndpoint', ''),
+            placeHolder: 'https://api.example.com/analyze'
+        });
+        
+        if (endpoint !== undefined) {
+            await config.update('apiEndpoint', endpoint, vscode.ConfigurationTarget.Global);
+        }
+        
+        // Ask for API key
+        const apiKey = await vscode.window.showInputBox({
+            prompt: 'Enter your API key',
+            value: config.get('apiKey', ''),
+            password: true
+        });
+        
+        if (apiKey !== undefined) {
+            await config.update('apiKey', apiKey, vscode.ConfigurationTarget.Global);
+        }
+        
+        // Ask if external API should be used
+        const useExternalAPI = await vscode.window.showQuickPick(['Yes', 'No'], {
+            placeHolder: 'Use external API for AI analysis?'
+        });
+        
+        if (useExternalAPI === 'Yes') {
+            await config.update('useExternalAPI', true, vscode.ConfigurationTarget.Global);
+            vscode.window.showInformationMessage('External API configured successfully!');
+        } else if (useExternalAPI === 'No') {
+            await config.update('useExternalAPI', false, vscode.ConfigurationTarget.Global);
+            vscode.window.showInformationMessage('Using local analysis only.');
+        }
+    });
+
     // Add to subscriptions
-    context.subscriptions.push(showReportCommand, toggleTrackingCommand, showBadgesCommand);
+    context.subscriptions.push(showReportCommand, toggleTrackingCommand, showBadgesCommand, enableCloudSyncCommand, configureAPICommand);
 }
 
 export function deactivate() {
