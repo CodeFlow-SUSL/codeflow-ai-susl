@@ -35,9 +35,36 @@ export function activate(context: vscode.ExtensionContext) {
             vscode.window.showErrorMessage(`Error generating report: ${error}`);
         }
     });
-    
+
+	const toggleTrackingCommand = vscode.commands.registerCommand('codeflow.toggleTracking', () => {
+        // This is handled by the DataCollector class
+        vscode.commands.executeCommand('codeflow.toggleTracking');
+    });
+
+	const showBadgesCommand = vscode.commands.registerCommand('codeflow.showBadges', () => {
+        const earnedBadges = gamificationSystem.getEarnedBadges();
+        const allBadges = gamificationSystem.getAllBadges();
+        const progress = gamificationSystem.getUserProgress();
+        
+        // Create a quick pick to show badges
+        const items = allBadges.map(badge => {
+            const isEarned = earnedBadges.some(b => b.id === badge.id);
+            return {
+                label: `${badge.icon} ${badge.name}`,
+                description: badge.description,
+                detail: isEarned ? 'Earned' : 'Not earned yet',
+                picked: isEarned
+            };
+        });
+
+        vscode.window.showQuickPick(items, {
+            placeHolder: `Level ${progress.level} Developer - ${progress.points} points`,
+            canPickMany: false
+        });
+    });
+
     // Add to subscriptions
-    context.subscriptions.push(showReportCommand);
+    context.subscriptions.push(showReportCommand, toggleTrackingCommand, showBadgesCommand);
 }
 
 export function deactivate() {
