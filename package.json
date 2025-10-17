@@ -1,15 +1,20 @@
 {
   "name": "codeflow-ai",
   "displayName": "CodeFlow AI",
-  "description": "",
+  "description": "AI-powered VS Code extension that tracks coding habits and provides productivity insights.",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.102.0"
   },
   "categories": [
-    "Other"
+    "Other",
+    "AI",
+    "Programming Languages",
+    "Visualization"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
@@ -37,5 +42,83 @@
     "typescript": "^5.8.3",
     "@vscode/test-cli": "^0.0.11",
     "@vscode/test-electron": "^2.5.2"
+  },
+   "contributes": {
+    "commands": [
+      {
+        "command": "codeflow.showReport",
+        "title": "CodeFlow: Show Weekly Report"
+      },
+      {
+        "command": "codeflow.toggleTracking",
+        "title": "CodeFlow: Toggle Tracking"
+      },
+      {
+        "command": "codeflow.showBadges",
+        "title": "CodeFlow: Show Earned Badges"
+      },
+      {
+        "command": "codeflow.enableCloudSync",
+        "title": "CodeFlow: Enable Cloud Sync"
+      },
+      {
+        "command": "codeflow.configureAPI",
+        "title": "CodeFlow: Configure AI API"
+      }
+    ],
+     "configuration": {
+      "title": "CodeFlow AI",
+      "properties": {
+        "codeflow.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable or disable CodeFlow tracking"
+        },
+        "codeflow.cloudSync": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable cloud sync for team insights"
+        },
+        "codeflow.useExternalAPI": {
+          "type": "boolean",
+          "default": false,
+          "description": "Use external API for AI analysis"
+        },
+        "codeflow.apiEndpoint": {
+          "type": "string",
+          "default": "",
+          "description": "API endpoint for external AI analysis"
+        },
+        "codeflow.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "API key for external AI analysis"
+        }
+      }
+    },
+     "menus": {
+      "commandPalette": [
+        {
+          "command": "codeflow.showReport",
+          "when": "true"
+        },
+        {
+          "command": "codeflow.toggleTracking",
+          "when": "true"
+        },
+        {
+          "command": "codeflow.showBadges",
+          "when": "true"
+        },
+        {
+          "command": "codeflow.enableCloudSync",
+          "when": "true"
+        },
+        {
+          "command": "codeflow.configureAPI",
+          "when": "true"
+        }
+      ]
+    }
   }
 }
