@@ -33,13 +33,37 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-const assert = __importStar(require("assert"));
-const vscode = __importStar(require("vscode"));
-suite('Extension Test Suite', () => {
-    vscode.window.showInformationMessage('Start all tests.');
-    test('Sample test', () => {
-        assert.strictEqual(-1, [1, 2, 3].indexOf(5));
-        assert.strictEqual(-1, [1, 2, 3].indexOf(0));
+exports.run = run;
+const path = __importStar(require("path"));
+const Mocha = require("mocha");
+const glob_1 = require("glob");
+function run() {
+    // Create the mocha test
+    const mocha = new Mocha({
+        ui: 'tdd',
+        color: true,
+        timeout: 60000,
     });
-});
-//# sourceMappingURL=extension.test.js.map
+    const testsRoot = path.resolve(__dirname, '..');
+    return new Promise((resolve, reject) => {
+        try {
+            // Find all test files synchronously
+            const files = glob_1.glob.sync('**/**.test.js', { cwd: testsRoot });
+            // Add files to the test suite
+            files.forEach(f => mocha.addFile(path.resolve(testsRoot, f)));
+            // Run the mocha tests
+            mocha.run((failures) => {
+                if (failures > 0) {
+                    reject(new Error(`${failures} tests failed.`));
+                }
+                else {
+                    resolve();
+                }
+            });
+        }
+        catch (err) {
+            reject(err);
+        }
+    });
+}
+//# sourceMappingURL=index.js.map
