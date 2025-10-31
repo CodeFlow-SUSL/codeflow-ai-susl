@@ -22,20 +22,21 @@
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src",
-    "test": "vscode-test"
+    "test": "vscode-test",
+    "train-model": "node ./ml/tfjs/train.js"
   },
   "devDependencies": {
-    "@types/vscode": "^1.102.0",
     "@types/mocha": "^10.0.10",
     "@types/node": "20.x",
+    "@types/vscode": "^1.102.0",
     "@typescript-eslint/eslint-plugin": "^8.31.1",
     "@typescript-eslint/parser": "^8.31.1",
-    "eslint": "^9.25.1",
-    "typescript": "^5.8.3",
     "@vscode/test-cli": "^0.0.11",
-    "@vscode/test-electron": "^2.5.2"
+    "@vscode/test-electron": "^2.5.2",
+    "eslint": "^9.25.1",
+    "typescript": "^5.8.3"
   },
-   "dependencies": {
+  "dependencies": {
     "@tensorflow/tfjs": "^4.22.0",
     "@types/chart.js": "^2.9.41",
     "@types/react": "^18.2.45",
@@ -44,7 +45,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
-   "contributes": {
+  "contributes": {
     "commands": [
       {
         "command": "codeflow.showReport",
@@ -65,9 +66,13 @@
       {
         "command": "codeflow.configureAPI",
         "title": "CodeFlow: Configure AI API"
+      },
+      {
+        "command": "codeflow.trainTFModel",
+        "title": "CodeFlow: Train TensorFlow.js Model"
       }
     ],
-     "configuration": {
+    "configuration": {
       "title": "CodeFlow AI",
       "properties": {
         "codeflow.enabled": {
@@ -94,10 +99,15 @@
           "type": "string",
           "default": "",
           "description": "API key for external AI analysis"
+        },
+        "codeflow.useTFModel": {
+          "type": "boolean",
+          "default": false,
+          "description": "Use TensorFlow.js model for productivity analysis"
         }
       }
     },
-     "menus": {
+    "menus": {
       "commandPalette": [
         {
           "command": "codeflow.showReport",
@@ -117,6 +127,10 @@
         },
         {
           "command": "codeflow.configureAPI",
+          "when": "true"
+        },
+        {
+          "command": "codeflow.trainTFModel",
           "when": "true"
         }
       ]
