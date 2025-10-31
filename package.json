@@ -16,14 +16,6 @@
     "onStartupFinished"
   ],
   "main": "./out/extension.js",
-  "contributes": {
-    "commands": [
-      {
-        "command": "codeflow-ai.helloWorld",
-        "title": "Type here"
-      }
-    ]
-  },
   "scripts": {
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
@@ -42,6 +34,15 @@
     "typescript": "^5.8.3",
     "@vscode/test-cli": "^0.0.11",
     "@vscode/test-electron": "^2.5.2"
+  },
+   "dependencies": {
+    "@tensorflow/tfjs": "^4.22.0",
+    "@types/chart.js": "^2.9.41",
+    "@types/react": "^18.2.45",
+    "@types/react-dom": "^18.2.18",
+    "chart.js": "^4.4.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
   },
    "contributes": {
     "commands": [
