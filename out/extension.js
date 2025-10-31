@@ -41,6 +41,8 @@ const aiAnalyzer_1 = require("./aiAnalyzer");
 const visualization_1 = require("./visualization");
 const gamification_1 = require("./gamification");
 const backendServices_1 = require("./backendServices");
+const child_process_1 = require("child_process");
+const path = __importStar(require("path"));
 function activate(context) {
     console.log('CodeFlow AI is now active');
     // Initialize components
@@ -132,6 +134,30 @@ function activate(context) {
             vscode.window.showInformationMessage('Using local analysis only.');
         }
     });
+    const trainTFModelCommand = vscode.commands.registerCommand('codeflow.trainTFModel', async () => {
+        try {
+            const tfPath = path.join(context.extensionPath, 'ml', 'tfjs');
+            const trainScript = path.join(tfPath, 'train.js');
+            // Show progress notification
+            vscode.window.withProgress({
+                location: vscode.ProgressLocation.Notification,
+                title: "Training TensorFlow.js Model",
+                cancellable: false
+            }, async (progress) => {
+                progress.report({ message: "Starting training process..." });
+                // Run the Node.js script
+                const result = await runNodeScript(trainScript, []);
+                progress.report({ message: "Training completed successfully!" });
+                // Enable TensorFlow.js model in settings
+                const config = vscode.workspace.getConfiguration('codeflow');
+                await config.update('useTFModel', true, vscode.ConfigurationTarget.Global);
+                vscode.window.showInformationMessage('TensorFlow.js model trained and enabled successfully!');
+            });
+        }
+        catch (error) {
+            vscode.window.showErrorMessage(`Error training TensorFlow.js model: ${error}`);
+        }
+    });
     // Register status bar item
     const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
     statusBarItem.text = "$(chart-line) CodeFlow";
@@ -139,12 +165,36 @@ function activate(context) {
     statusBarItem.command = 'codeflow.showReport';
     statusBarItem.show();
     // Add to subscriptions
-    context.subscriptions.push(showReportCommand, toggleTrackingCommand, showBadgesCommand, enableCloudSyncCommand, configureAPICommand, statusBarItem);
+    context.subscriptions.push(dataCollector, showReportCommand, toggleTrackingCommand, showBadgesCommand, enableCloudSyncCommand, configureAPICommand, trainTFModelCommand, statusBarItem);
     // Check for new badges periodically
     setInterval(() => {
         const activities = gamificationSystem.getActivitiesForLastWeek();
         gamificationSystem.checkForNewBadges(activities);
     }, 60000 * 60); // Check every hour
+}
+function runNodeScript(scriptPath, args) {
+    return new Promise((resolve, reject) => {
+        const child = (0, child_process_1.spawn)('node', [scriptPath, ...args]);
+        let stdout = '';
+        let stderr = '';
+        child.stdout.on('data', (data) => {
+            stdout += data.toString();
+        });
+        child.stderr.on('data', (data) => {
+            stderr += data.toString();
+        });
+        child.on('close', (code) => {
+            if (code !== 0) {
+                reject(new Error(`Script exited with code ${code}: ${stderr}`));
+            }
+            else {
+                resolve(stdout);
+            }
+        });
+        child.on('error', (error) => {
+            reject(error);
+        });
+    });
 }
 function deactivate() {
     console.log('CodeFlow AI is now deactivated');
