@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
+import { spawn } from 'child_process';
 import { CodingActivity } from './dataCollector';
 
 export interface ProductivityInsight {
@@ -9,6 +10,10 @@ export interface ProductivityInsight {
     mostWorkedFiles: { file: string; time: number }[];
     languageDistribution: { language: string; percentage: number }[];
     suggestions: string[];
+    tfInsights?: {
+        featureImportance: { [key: string]: number };
+        tfScore: number;
+    };
 }
 
 export class AIAnalyzer {
@@ -16,6 +21,7 @@ export class AIAnalyzer {
     private useExternalAPI: boolean = false;
     private apiEndpoint: string = '';
     private apiKey: string = '';
+    private useTFModel: boolean = false;
 
     constructor(context: vscode.ExtensionContext) {
         this.context = context;
@@ -25,6 +31,7 @@ export class AIAnalyzer {
         this.useExternalAPI = config.get('useExternalAPI', false);
         this.apiEndpoint = config.get('apiEndpoint', '');
         this.apiKey = config.get('apiKey', '');
+        this.useTFModel = config.get('useTFModel', false);
     }
 
     public async analyzeData(days: number = 7): Promise<ProductivityInsight> {
@@ -44,6 +51,8 @@ export class AIAnalyzer {
         // Choose analysis method based on configuration
         if (this.useExternalAPI && this.apiEndpoint && this.apiKey) {
             return this.analyzeWithExternalAPI(activities);
+        } else if (this.useTFModel) {
+            return this.analyzeWithTFModel(activities);
         } else {
             return this.performLocalAnalysis(activities);
         }
@@ -89,6 +98,141 @@ export class AIAnalyzer {
             // Fall back to local analysis
             return this.performLocalAnalysis(activities);
         }
+    }
+
+    private async analyzeWithTFModel(activities: CodingActivity[]): Promise<ProductivityInsight> {
+        try {
+            // Prepare data for TensorFlow.js model
+            const tfData = this.prepareTFData(activities);
+            
+            // Get the path to the TensorFlow.js predict script
+            const tfPath = path.join(this.context.extensionPath, 'ml', 'tfjs');
+            const predictScript = path.join(tfPath, 'predict.js');
+            
+            // Write data to a temporary file
+            const tempDataPath = path.join(tfPath, 'temp_data.json');
+            fs.writeFileSync(tempDataPath, JSON.stringify(tfData));
+            
+            // Run the Node.js script
+            const result = await this.runNodeScript(predictScript, [tempDataPath]);
+            
+            // Parse the result
+            const tfResult = JSON.parse(result);
+            
+            // Get local analysis for additional insights
+            const localInsight = this.performLocalAnalysis(activities);
+            
+            // Combine TensorFlow.js results with local insights
+            return {
+                ...localInsight,
+                productivityScore: tfResult.score,
+                tfInsights: {
+                    featureImportance: tfResult.featureImportance,
+                    tfScore: tfResult.score
+                }
+            };
+        } catch (error) {
+            vscode.window.showErrorMessage(`Error analyzing data with TensorFlow.js model: ${error}`);
+            // Fall back to local analysis
+            return this.performLocalAnalysis(activities);
+        }
+    }
+
+    private prepareTFData(activities: CodingActivity[]): any {
+        // Group activities by session (within 30 minutes)
+        const sortedActivities = [...activities].sort((a, b) => a.timestamp - b.timestamp);
+        const sessions: any[] = [];
+        let currentSession: any = null;
+        
+        for (const activity of sortedActivities) {
+            if (!currentSession || activity.timestamp - currentSession.lastActivity > 30 * 60 * 1000) {
+                // Start new session
+                currentSession = {
+                    start_time: activity.timestamp,
+                    lastActivity: activity.timestamp,
+                    keystrokes: 0,
+                    commands: 0,
+                    files: new Set(),
+                    languages: new Set()
+                };
+                sessions.push(currentSession);
+            }
+            
+            // Update session data
+            currentSession.lastActivity = activity.timestamp;
+            if (activity.keystrokes) currentSession.keystrokes += activity.keystrokes;
+            if (activity.command) currentSession.commands++;
+            if (activity.file) currentSession.files.add(activity.file);
+            if (activity.language) currentSession.languages.add(activity.language);
+        }
+        
+        // Convert sessions to TF input format
+        const tfSessions = sessions.map(session => {
+            const duration = (session.lastActivity - session.start_time) / (1000 * 60); // in minutes
+            return {
+                hour: new Date(session.start_time).getHours(),
+                dayOfWeek: new Date(session.start_time).getDay(),
+                dayOfMonth: new Date(session.start_time).getDate(),
+                keystrokes: session.keystrokes,
+                commands: session.commands,
+                files: session.files.size,
+                languages: session.languages.size,
+                duration: duration,
+                keystrokesPerMinute: session.keystrokes / duration,
+                commandsPerMinute: session.commands / duration,
+                filesPerMinute: session.files.size / duration
+            };
+        });
+        
+        // Aggregate all sessions to get overall features
+        const totalKeystrokes = tfSessions.reduce((sum, session) => sum + session.keystrokes, 0);
+        const totalCommands = tfSessions.reduce((sum, session) => sum + session.commands, 0);
+        const totalFiles = new Set(tfSessions.flatMap(session => Array.from({ length: session.files }))).size;
+        const totalLanguages = new Set(tfSessions.flatMap(session => Array.from({ length: session.languages }))).size;
+        const totalDuration = tfSessions.reduce((sum, session) => sum + session.duration, 0);
+        
+        return {
+            hour: tfSessions.length > 0 ? tfSessions[0].hour : 0,
+            dayOfWeek: tfSessions.length > 0 ? tfSessions[0].dayOfWeek : 0,
+            dayOfMonth: tfSessions.length > 0 ? tfSessions[0].dayOfMonth : 0,
+            keystrokes: totalKeystrokes,
+            commands: totalCommands,
+            files: totalFiles,
+            languages: totalLanguages,
+            duration: totalDuration,
+            keystrokesPerMinute: totalDuration > 0 ? totalKeystrokes / totalDuration : 0,
+            commandsPerMinute: totalDuration > 0 ? totalCommands / totalDuration : 0,
+            filesPerMinute: totalDuration > 0 ? totalFiles / totalDuration : 0
+        };
+    }
+
+    private runNodeScript(scriptPath: string, args: string[]): Promise<string> {
+        return new Promise((resolve, reject) => {
+            const child = spawn('node', [scriptPath, ...args]);
+            
+            let stdout = '';
+            let stderr = '';
+            
+            child.stdout.on('data', (data) => {
+                stdout += data.toString();
+            });
+            
+            child.stderr.on('data', (data) => {
+                stderr += data.toString();
+            });
+            
+            child.on('close', (code) => {
+                if (code !== 0) {
+                    reject(new Error(`Script exited with code ${code}: ${stderr}`));
+                } else {
+                    resolve(stdout);
+                }
+            });
+            
+            child.on('error', (error) => {
+                reject(error);
+            });
+        });
     }
 
     private performLocalAnalysis(activities: CodingActivity[]): ProductivityInsight {
