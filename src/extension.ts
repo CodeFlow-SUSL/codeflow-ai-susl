@@ -38,9 +38,13 @@ export function activate(context: vscode.ExtensionContext) {
         }
     });
     
-    const toggleTrackingCommand = vscode.commands.registerCommand('codeflow.toggleTracking', () => {
-        // This is handled by the DataCollector class
-        vscode.commands.executeCommand('codeflow.toggleTracking');
+    const toggleTrackingCommand = vscode.commands.registerCommand('codeflow.toggleTracking', async () => {
+        const config = vscode.workspace.getConfiguration('codeflow');
+        const currentValue = config.get('enabled', true);
+        await config.update('enabled', !currentValue, vscode.ConfigurationTarget.Global);
+        
+        const status = !currentValue ? 'enabled' : 'disabled';
+        vscode.window.showInformationMessage(`CodeFlow tracking ${status}`);
     });
     
     const showBadgesCommand = vscode.commands.registerCommand('codeflow.showBadges', () => {
@@ -118,8 +122,15 @@ export function activate(context: vscode.ExtensionContext) {
             const tfPath = path.join(context.extensionPath, 'ml', 'tfjs');
             const trainScript = path.join(tfPath, 'train.js');
             
+            // Verify the script exists
+            const fs = require('fs');
+            if (!fs.existsSync(trainScript)) {
+                vscode.window.showErrorMessage(`Training script not found at: ${trainScript}`);
+                return;
+            }
+            
             // Show progress notification
-            vscode.window.withProgress({
+            await vscode.window.withProgress({
                 location: vscode.ProgressLocation.Notification,
                 title: "Training TensorFlow.js Model",
                 cancellable: false
@@ -135,9 +146,13 @@ export function activate(context: vscode.ExtensionContext) {
                 const config = vscode.workspace.getConfiguration('codeflow');
                 await config.update('useTFModel', true, vscode.ConfigurationTarget.Global);
                 
+                // Show output in console
+                console.log('Training output:', result);
+                
                 vscode.window.showInformationMessage('TensorFlow.js model trained and enabled successfully!');
             });
         } catch (error) {
+            console.error('Training error:', error);
             vscode.window.showErrorMessage(`Error training TensorFlow.js model: ${error}`);
         }
     });
@@ -170,17 +185,24 @@ export function activate(context: vscode.ExtensionContext) {
 
 function runNodeScript(scriptPath: string, args: string[]): Promise<string> {
     return new Promise((resolve, reject) => {
-        const child = spawn('node', [scriptPath, ...args]);
+        const child = spawn('node', [scriptPath, ...args], {
+            cwd: path.dirname(scriptPath),
+            shell: true
+        });
         
         let stdout = '';
         let stderr = '';
         
         child.stdout.on('data', (data) => {
-            stdout += data.toString();
+            const output = data.toString();
+            stdout += output;
+            console.log('Training:', output.trim());
         });
         
         child.stderr.on('data', (data) => {
-            stderr += data.toString();
+            const output = data.toString();
+            stderr += output;
+            console.error('Training error:', output.trim());
         });
         
         child.on('close', (code) => {
