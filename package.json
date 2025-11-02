@@ -49,27 +49,53 @@
     "commands": [
       {
         "command": "codeflow.showReport",
-        "title": "CodeFlow: Show Weekly Report"
+        "title": "CodeFlow: Show Weekly Report",
+        "icon": "$(chart-line)"
       },
       {
         "command": "codeflow.toggleTracking",
-        "title": "CodeFlow: Toggle Tracking"
+        "title": "CodeFlow: Toggle Tracking",
+        "icon": "$(eye)"
       },
       {
         "command": "codeflow.showBadges",
-        "title": "CodeFlow: Show Earned Badges"
+        "title": "CodeFlow: Show Earned Badges",
+        "icon": "$(star-full)"
       },
       {
         "command": "codeflow.enableCloudSync",
-        "title": "CodeFlow: Enable Cloud Sync"
+        "title": "CodeFlow: Enable Cloud Sync",
+        "icon": "$(cloud-upload)"
       },
       {
         "command": "codeflow.configureAPI",
-        "title": "CodeFlow: Configure AI API"
+        "title": "CodeFlow: Configure AI API",
+        "icon": "$(settings-gear)"
       },
       {
         "command": "codeflow.trainTFModel",
-        "title": "CodeFlow: Train TensorFlow.js Model"
+        "title": "CodeFlow: Train TensorFlow.js Model",
+        "icon": "$(beaker)"
+      },
+      {
+        "command": "codeflow.setGoal",
+        "title": "CodeFlow: Set Goal",
+        "icon": "$(target)"
+      },
+      {
+        "command": "codeflow.viewStats",
+        "title": "CodeFlow: View Statistics",
+        "icon": "$(graph)"
+      },
+      {
+        "command": "codeflow.comparePerformance",
+        "title": "CodeFlow: Compare Performance",
+        "icon": "$(graph-line)"
+      },
+      {
+        "command": "codeflow.exportData",
+        "title": "CodeFlow: Export Data",
+        "icon": "$(export)"
       }
     ],
     "configuration": {
@@ -104,6 +130,17 @@
           "type": "boolean",
           "default": false,
           "description": "Use TensorFlow.js model for productivity analysis"
+        },
+        "codeflow.goals": {
+          "type": "object",
+          "default": {},
+          "description": "User-defined productivity goals"
+        },
+        "codeflow.theme": {
+          "type": "string",
+          "enum": ["light", "dark", "auto"],
+          "default": "auto",
+          "description": "Theme preference for CodeFlow reports"
         }
       }
     },
@@ -131,6 +168,22 @@
         },
         {
           "command": "codeflow.trainTFModel",
+          "when": "true"
+        },
+        {
+          "command": "codeflow.setGoal",
+          "when": "true"
+        },
+        {
+          "command": "codeflow.viewStats",
+          "when": "true"
+        },
+        {
+          "command": "codeflow.comparePerformance",
+          "when": "true"
+        },
+        {
+          "command": "codeflow.exportData",
           "when": "true"
         }
       ]

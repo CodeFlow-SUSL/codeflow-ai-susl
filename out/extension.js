@@ -170,6 +170,98 @@ function activate(context) {
             vscode.window.showErrorMessage(`Error training TensorFlow.js model: ${error}`);
         }
     });
+    const setGoalCommand = vscode.commands.registerCommand('codeflow.setGoal', async () => {
+        const goalType = await vscode.window.showQuickPick([
+            'Daily Productivity Score',
+            'Weekly Coding Hours',
+            'Languages to Learn',
+            'Badges to Earn'
+        ], {
+            placeHolder: 'Select a goal type'
+        });
+        if (!goalType) {
+            return;
+        }
+        const goalValue = await vscode.window.showInputBox({
+            prompt: `Enter your target for ${goalType}`,
+            placeHolder: 'e.g., 80 for score, 20 for hours, 5 for languages',
+            validateInput: (value) => {
+                return isNaN(Number(value)) ? 'Please enter a valid number' : null;
+            }
+        });
+        if (goalValue) {
+            const config = vscode.workspace.getConfiguration('codeflow');
+            const goals = config.get('goals', {});
+            goals[goalType] = Number(goalValue);
+            await config.update('goals', goals, vscode.ConfigurationTarget.Global);
+            vscode.window.showInformationMessage(`✅ Goal set: ${goalType} = ${goalValue}`);
+        }
+    });
+    const viewStatsCommand = vscode.commands.registerCommand('codeflow.viewStats', async () => {
+        const period = await vscode.window.showQuickPick([
+            'Today',
+            'Last 7 Days',
+            'Last 30 Days',
+            'All Time'
+        ], {
+            placeHolder: 'Select time period'
+        });
+        if (!period) {
+            return;
+        }
+        const days = period === 'Today' ? 1 :
+            period === 'Last 7 Days' ? 7 :
+                period === 'Last 30 Days' ? 30 : 365;
+        try {
+            const insight = await aiAnalyzer.analyzeData(days);
+            visualizationPanel.show(insight);
+        }
+        catch (error) {
+            vscode.window.showErrorMessage(`Error viewing stats: ${error}`);
+        }
+    });
+    const comparePerformanceCommand = vscode.commands.registerCommand('codeflow.comparePerformance', async () => {
+        try {
+            const thisWeek = await aiAnalyzer.analyzeData(7);
+            const lastWeek = await aiAnalyzer.analyzeData(14);
+            const scoreDiff = thisWeek.productivityScore - lastWeek.productivityScore;
+            const emoji = scoreDiff > 0 ? '📈' : scoreDiff < 0 ? '📉' : '➡️';
+            const trend = scoreDiff > 0 ? 'improved' : scoreDiff < 0 ? 'decreased' : 'remained stable';
+            vscode.window.showInformationMessage(`${emoji} Your productivity has ${trend} by ${Math.abs(scoreDiff).toFixed(1)} points compared to last week!`);
+        }
+        catch (error) {
+            vscode.window.showErrorMessage(`Error comparing performance: ${error}`);
+        }
+    });
+    const exportDataCommand = vscode.commands.registerCommand('codeflow.exportData', async () => {
+        try {
+            const insight = await aiAnalyzer.analyzeData(30);
+            const progress = gamificationSystem.getUserProgress();
+            const badges = gamificationSystem.getEarnedBadges();
+            const exportData = {
+                generatedAt: new Date().toISOString(),
+                productivity: insight,
+                gamification: {
+                    progress,
+                    badges
+                }
+            };
+            const saveUri = await vscode.window.showSaveDialog({
+                filters: {
+                    'JSON': ['json']
+                },
+                defaultUri: vscode.Uri.file(`codeflow-export-${new Date().toISOString().split('T')[0]}.json`)
+            });
+            if (saveUri) {
+                const fs = require('fs');
+                fs.writeFileSync(saveUri.fsPath, JSON.stringify(exportData, null, 2));
+                vscode.window.showInformationMessage('📥 Data exported successfully!');
+            }
+        }
+        catch (error) {
+            vscode.window.showErrorMessage(`Error exporting data: ${error}`);
+        }
+    });
     // Register status bar item
     const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
     statusBarItem.text = "$(chart-line) CodeFlow";
@@ -177,7 +269,7 @@ function activate(context) {
     statusBarItem.command = 'codeflow.showReport';
     statusBarItem.show();
     // Add to subscriptions
-    context.subscriptions.push(dataCollector, showReportCommand, toggleTrackingCommand, showBadgesCommand, enableCloudSyncCommand, configureAPICommand, trainTFModelCommand, statusBarItem);
+    context.subscriptions.push(dataCollector, showReportCommand, toggleTrackingCommand, showBadgesCommand, enableCloudSyncCommand, configureAPICommand, trainTFModelCommand, setGoalCommand, viewStatsCommand, comparePerformanceCommand, exportDataCommand, statusBarItem);
     // Check for new badges periodically
     setInterval(() => {
         const activities = gamificationSystem.getActivitiesForLastWeek();
