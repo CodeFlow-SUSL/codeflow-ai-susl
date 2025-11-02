@@ -16,57 +16,89 @@
     "onStartupFinished"
   ],
   "main": "./out/extension.js",
-  "contributes": {
-    "commands": [
-      {
-        "command": "codeflow-ai.helloWorld",
-        "title": "Type here"
-      }
-    ]
-  },
   "scripts": {
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src",
-    "test": "vscode-test"
+    "test": "vscode-test",
+    "train-model": "node ./ml/tfjs/train.js"
   },
   "devDependencies": {
-    "@types/vscode": "^1.102.0",
     "@types/mocha": "^10.0.10",
     "@types/node": "20.x",
+    "@types/vscode": "^1.102.0",
     "@typescript-eslint/eslint-plugin": "^8.31.1",
     "@typescript-eslint/parser": "^8.31.1",
-    "eslint": "^9.25.1",
-    "typescript": "^5.8.3",
     "@vscode/test-cli": "^0.0.11",
-    "@vscode/test-electron": "^2.5.2"
+    "@vscode/test-electron": "^2.5.2",
+    "eslint": "^9.25.1",
+    "typescript": "^5.8.3"
   },
-   "contributes": {
+  "dependencies": {
+    "@tensorflow/tfjs": "^4.22.0",
+    "@types/chart.js": "^2.9.41",
+    "@types/react": "^18.2.45",
+    "@types/react-dom": "^18.2.18",
+    "chart.js": "^4.4.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "contributes": {
     "commands": [
       {
         "command": "codeflow.showReport",
-        "title": "CodeFlow: Show Weekly Report"
+        "title": "CodeFlow: Show Weekly Report",
+        "icon": "$(chart-line)"
       },
       {
         "command": "codeflow.toggleTracking",
-        "title": "CodeFlow: Toggle Tracking"
+        "title": "CodeFlow: Toggle Tracking",
+        "icon": "$(eye)"
       },
       {
         "command": "codeflow.showBadges",
-        "title": "CodeFlow: Show Earned Badges"
+        "title": "CodeFlow: Show Earned Badges",
+        "icon": "$(star-full)"
       },
       {
         "command": "codeflow.enableCloudSync",
-        "title": "CodeFlow: Enable Cloud Sync"
+        "title": "CodeFlow: Enable Cloud Sync",
+        "icon": "$(cloud-upload)"
       },
       {
         "command": "codeflow.configureAPI",
-        "title": "CodeFlow: Configure AI API"
+        "title": "CodeFlow: Configure AI API",
+        "icon": "$(settings-gear)"
+      },
+      {
+        "command": "codeflow.trainTFModel",
+        "title": "CodeFlow: Train TensorFlow.js Model",
+        "icon": "$(beaker)"
+      },
+      {
+        "command": "codeflow.setGoal",
+        "title": "CodeFlow: Set Goal",
+        "icon": "$(target)"
+      },
+      {
+        "command": "codeflow.viewStats",
+        "title": "CodeFlow: View Statistics",
+        "icon": "$(graph)"
+      },
+      {
+        "command": "codeflow.comparePerformance",
+        "title": "CodeFlow: Compare Performance",
+        "icon": "$(graph-line)"
+      },
+      {
+        "command": "codeflow.exportData",
+        "title": "CodeFlow: Export Data",
+        "icon": "$(export)"
       }
     ],
-     "configuration": {
+    "configuration": {
       "title": "CodeFlow AI",
       "properties": {
         "codeflow.enabled": {
@@ -93,10 +125,26 @@
           "type": "string",
           "default": "",
           "description": "API key for external AI analysis"
+        },
+        "codeflow.useTFModel": {
+          "type": "boolean",
+          "default": false,
+          "description": "Use TensorFlow.js model for productivity analysis"
+        },
+        "codeflow.goals": {
+          "type": "object",
+          "default": {},
+          "description": "User-defined productivity goals"
+        },
+        "codeflow.theme": {
+          "type": "string",
+          "enum": ["light", "dark", "auto"],
+          "default": "auto",
+          "description": "Theme preference for CodeFlow reports"
         }
       }
     },
-     "menus": {
+    "menus": {
       "commandPalette": [
         {
           "command": "codeflow.showReport",
@@ -116,6 +164,26 @@
         },
         {
           "command": "codeflow.configureAPI",
+          "when": "true"
+        },
+        {
+          "command": "codeflow.trainTFModel",
+          "when": "true"
+        },
+        {
+          "command": "codeflow.setGoal",
+          "when": "true"
+        },
+        {
+          "command": "codeflow.viewStats",
+          "when": "true"
+        },
+        {
+          "command": "codeflow.comparePerformance",
+          "when": "true"
+        },
+        {
+          "command": "codeflow.exportData",
           "when": "true"
         }
       ]
