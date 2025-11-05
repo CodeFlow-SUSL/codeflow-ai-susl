@@ -18,3 +18,12 @@ export class ActivityTracker {
         this.statusBarItem.show();
         this.initialize(context);
     }
+
+    private initialize(context: vscode.ExtensionContext): void {
+        const config = vscode.workspace.getConfiguration('codeflow');
+        this.isEnabled = config.get('enabled', true);
+        this.registerEventListeners();
+        this.registerCommands();
+        context.subscriptions.push(...this.disposables);
+        this.startKeystrokeTimer();
+    }
