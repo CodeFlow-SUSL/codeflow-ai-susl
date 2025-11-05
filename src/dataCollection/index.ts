@@ -27,3 +27,36 @@ export class ActivityTracker {
         context.subscriptions.push(...this.disposables);
         this.startKeystrokeTimer();
     }
+
+    private registerEventListeners(): void {
+        // Track text changes (keystrokes)
+        this.disposables.push(
+            vscode.workspace.onDidChangeTextDocument((event) => {
+                if (!this.isEnabled) return;
+                const document = event.document;
+                if (document.isUntitled || document.getText().length > 1000000) return;
+                const filePath = document.uri.fsPath;
+                const language = document.languageId;
+                let keystrokes = 0;
+                for (const change of event.contentChanges) {
+                    keystrokes += change.text.length;
+                }
+                if (!this.keystrokeBuffer[filePath]) {
+                    this.keystrokeBuffer[filePath] = 0;
+                }
+                this.keystrokeBuffer[filePath] += keystrokes;
+            })
+        );
+
+        // Track file saves
+        this.disposables.push(
+            vscode.workspace.onDidSaveTextDocument((document) => {
+                if (!this.isEnabled) return;
+                const filePath = document.uri.fsPath;
+                const language = document.languageId;
+                this.trackActivity({
+                    type: ActivityType.SAVE,
+                    data: { filePath, language }
+                });
+            })
+        );
