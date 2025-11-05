@@ -37,4 +37,10 @@ export interface SessionMetadata {
   commandsExecuted: string[];
 }
 
+export interface DailyActivityLog {
+  date: string;
+  sessions: ActivitySession[];
+  summary: DailySummary;
+}
+
 
