@@ -43,4 +43,10 @@ export interface DailyActivityLog {
   summary: DailySummary;
 }
 
+export interface DailySummary {
+  totalDuration: number;
+  totalKeystrokes: number;
+  totalSaves: number;
+}
+
 
