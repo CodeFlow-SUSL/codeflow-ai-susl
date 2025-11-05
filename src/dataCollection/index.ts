@@ -140,3 +140,15 @@ export class ActivityTracker {
             }
         }
     }
+private trackActivity(activity: Omit<CodingActivity, 'id' | 'timestamp'>): void {
+        const fullActivity: CodingActivity = {
+            id: this.generateActivityId(),
+            timestamp: Date.now(),
+            ...activity
+        };
+        this.storage.addActivity(fullActivity);
+    }
+
+    private generateActivityId(): string {
+        return `activity_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    }
