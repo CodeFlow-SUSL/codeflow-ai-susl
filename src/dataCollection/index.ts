@@ -109,3 +109,16 @@ export class ActivityTracker {
             })
         );
     }
+ private registerCommands(): void {
+        this.disposables.push(
+            vscode.commands.registerCommand('codeflow.toggleTracking', () => {
+                this.isEnabled = !this.isEnabled;
+                this.statusBarItem.text = this.isEnabled
+                    ? "$(pulse) CodeFlow: Active"
+                    : "$(circle-slash) CodeFlow: Paused";
+                vscode.window.showInformationMessage(
+                    `CodeFlow tracking ${this.isEnabled ? 'enabled' : 'disabled'}`
+                );
+            })
+        );
+    }
