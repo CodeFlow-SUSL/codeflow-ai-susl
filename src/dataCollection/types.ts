@@ -14,3 +14,11 @@ export enum ActivityType {
   COMMAND = 'command'
 }
 
+export interface ActivityData {
+  filePath?: string;
+  language?: string;
+  keystrokes?: number;
+  command?: string;
+}
+
+
