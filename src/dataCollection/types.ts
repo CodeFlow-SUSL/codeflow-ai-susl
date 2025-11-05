@@ -49,4 +49,12 @@ export interface DailySummary {
   totalSaves: number;
 }
 
+export interface DailySummary {
+  totalDuration: number;
+  totalKeystrokes: number;
+  totalSaves: number;
+  filesWorked: number;
+  languagesUsed: number;
+}
+
 
