@@ -98,3 +98,14 @@ export class ActivityTracker {
                 });
             })
         );
+           this.disposables.push(
+            vscode.commands.onDidExecuteCommand((event) => {
+                if (!this.isEnabled) return;
+                if (event.command.startsWith('codeflow.')) return;
+                this.trackActivity({
+                    type: ActivityType.COMMAND,
+                    data: { command: event.command }
+                });
+            })
+        );
+    }
