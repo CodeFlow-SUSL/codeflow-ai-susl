@@ -152,3 +152,15 @@ private trackActivity(activity: Omit<CodingActivity, 'id' | 'timestamp'>): void 
     private generateActivityId(): string {
         return `activity_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     }
+ public dispose(): void {
+        this.storage.endCurrentSession();
+        if (this.keystrokeTimer) {
+            clearInterval(this.keystrokeTimer);
+            this.keystrokeTimer = null;
+        }
+        for (const disposable of this.disposables) {
+            disposable.dispose();
+        }
+        this.statusBarItem.dispose();
+    }
+}
