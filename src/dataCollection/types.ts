@@ -57,4 +57,14 @@ export interface DailySummary {
   languagesUsed: number;
 }
 
+export interface DailySummary {
+  totalDuration: number;
+  totalKeystrokes: number;
+  totalSaves: number;
+  filesWorked: number;
+  languagesUsed: number;
+  mostActiveHour: number;
+  productivityScore: number;
+}
+
 
