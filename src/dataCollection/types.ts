@@ -29,4 +29,12 @@ export interface ActivitySession {
   metadata: SessionMetadata;
 }
 
+export interface SessionMetadata {
+  totalKeystrokes: number;
+  totalSaves: number;
+  filesWorked: string[];
+  languagesUsed: string[];
+  commandsExecuted: string[];
+}
+
 
