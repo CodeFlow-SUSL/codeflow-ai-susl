@@ -60,3 +60,41 @@ export class ActivityTracker {
                 });
             })
         );
+
+         this.disposables.push(
+            vscode.window.onDidChangeActiveTextEditor((editor) => {
+                if (!this.isEnabled || !editor) return;
+                const filePath = editor.document.uri.fsPath;
+                const language = editor.document.languageId;
+                this.trackActivity({
+                    type: ActivityType.SWITCH_FILE,
+                    data: { filePath, language }
+                });
+            })
+        );
+
+        // Track file openings
+        this.disposables.push(
+            vscode.workspace.onDidOpenTextDocument((document) => {
+                if (!this.isEnabled) return;
+                const filePath = document.uri.fsPath;
+                const language = document.languageId;
+                this.trackActivity({
+                    type: ActivityType.OPEN_FILE,
+                    data: { filePath, language }
+                });
+            })
+        );
+
+        // Track file closures
+        this.disposables.push(
+            vscode.workspace.onDidCloseTextDocument((document) => {
+                if (!this.isEnabled) return;
+                const filePath = document.uri.fsPath;
+                const language = document.languageId;
+                this.trackActivity({
+                    type: ActivityType.CLOSE_FILE,
+                    data: { filePath, language }
+                });
+            })
+        );
