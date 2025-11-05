@@ -21,4 +21,12 @@ export interface ActivityData {
   command?: string;
 }
 
+export interface ActivitySession {
+  id: string;
+  startTime: number;
+  endTime?: number;
+  activities: CodingActivity[];
+  metadata: SessionMetadata;
+}
+
 
