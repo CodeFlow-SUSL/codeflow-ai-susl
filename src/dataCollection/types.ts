@@ -47,20 +47,6 @@ export interface DailySummary {
   totalDuration: number;
   totalKeystrokes: number;
   totalSaves: number;
-}
-
-export interface DailySummary {
-  totalDuration: number;
-  totalKeystrokes: number;
-  totalSaves: number;
-  filesWorked: number;
-  languagesUsed: number;
-}
-
-export interface DailySummary {
-  totalDuration: number;
-  totalKeystrokes: number;
-  totalSaves: number;
   filesWorked: number;
   languagesUsed: number;
   mostActiveHour: number;
