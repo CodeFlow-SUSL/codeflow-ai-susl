@@ -122,3 +122,21 @@ export class ActivityTracker {
             })
         );
     }
+    private startKeystrokeTimer(): void {
+        this.keystrokeTimer = setInterval(() => {
+            this.processKeystrokeBuffer();
+        }, 2000);
+    }
+
+    private processKeystrokeBuffer(): void {
+        for (const filePath in this.keystrokeBuffer) {
+            const keystrokes = this.keystrokeBuffer[filePath];
+            if (keystrokes > 0) {
+                this.trackActivity({
+                    type: ActivityType.KEYSTROKE,
+                    data: { filePath, keystrokes }
+                });
+                this.keystrokeBuffer[filePath] = 0;
+            }
+        }
+    }
