@@ -33,3 +33,7 @@ export class DataCollectionModule {
         const dailyLog = this.storage.loadDailyLog(date);
         return dailyLog ? dailyLog.summary : null;
     }
+     public dispose(): void {
+        this.tracker.dispose();
+    }
+}
