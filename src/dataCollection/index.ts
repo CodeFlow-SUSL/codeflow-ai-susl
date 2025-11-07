@@ -22,3 +22,6 @@ export class DataCollectionModule {
         }
         return activities;
     }
+    public getActivitiesForDateRange(startDate: string, endDate: string): CodingActivity[] {
+        return this.storage.getActivitiesForDateRange(startDate, endDate);
+    }
