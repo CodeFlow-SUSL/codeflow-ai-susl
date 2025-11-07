@@ -25,3 +25,11 @@ export class DataCollectionModule {
     public getActivitiesForDateRange(startDate: string, endDate: string): CodingActivity[] {
         return this.storage.getActivitiesForDateRange(startDate, endDate);
     }
+     public getAllDailyLogs(): DailyActivityLog[] {
+        return this.storage.getAllDailyLogs();
+    }
+
+    public getDailySummary(date: string) {
+        const dailyLog = this.storage.loadDailyLog(date);
+        return dailyLog ? dailyLog.summary : null;
+    }
