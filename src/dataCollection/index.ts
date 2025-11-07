@@ -11,3 +11,14 @@ export class DataCollectionModule {
         this.storage = new DataStorage(context);
         this.tracker = new ActivityTracker(context);
     }
+      public getActivitiesForDate(date: string): CodingActivity[] {
+        const dailyLog = this.storage.loadDailyLog(date);
+        if (!dailyLog) {
+            return [];
+        }
+        const activities: CodingActivity[] = [];
+        for (const session of dailyLog.sessions) {
+            activities.push(...session.activities);
+        }
+        return activities;
+    }
