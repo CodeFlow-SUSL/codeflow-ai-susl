@@ -160,6 +160,10 @@ export class DataStorage {
       }
     }
 
+        summary.filesWorked = allFiles.size;
+    summary.languagesUsed = allLanguages.size;
+
+
 
 
 
