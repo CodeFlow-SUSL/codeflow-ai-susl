@@ -141,6 +141,11 @@ export class DataStorage {
     const hourlyActivity = new Array(24).fill(0);
     summary.totalDuration = 0;
 
+        for (const session of dailyLog.sessions) {
+      summary.totalKeystrokes += session.metadata.totalKeystrokes;
+      summary.totalSaves += session.metadata.totalSaves;
+
+
 
 
 
