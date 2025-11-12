@@ -22,6 +22,14 @@ export class DataStorage {
     return path.join(this.storagePath, `activity-${date}.json`);
   }
 
+    public loadDailyLog(date: string): DailyActivityLog | null {
+    const filePath = this.getLogFilePath(date);
+    
+    if (!fs.existsSync(filePath)) {
+      return null;
+    }
+
+
 
 
 
