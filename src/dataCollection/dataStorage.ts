@@ -213,6 +213,16 @@ export class DataStorage {
     
     if (!dailyLog) return;
 
+        const currentSession = dailyLog.sessions.find(session => !session.endTime);
+    
+    if (currentSession) {
+      currentSession.endTime = Date.now();
+      this.updateDailySummary(dailyLog);
+      this.saveDailyLog(dailyLog);
+    }
+  }
+
+
 
 
 
