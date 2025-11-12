@@ -48,6 +48,15 @@ export class DataStorage {
     }
   }
 
+    public addActivity(activity: CodingActivity): void {
+    const today = new Date().toISOString().split('T')[0];
+    let dailyLog = this.loadDailyLog(today);
+    
+    if (!dailyLog) {
+      dailyLog = this.createEmptyDailyLog(today);
+    }
+
+
 
 
 
