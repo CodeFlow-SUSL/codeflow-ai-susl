@@ -38,6 +38,17 @@ export class DataStorage {
     }
   }
 
+    public saveDailyLog(dailyLog: DailyActivityLog): void {
+    const filePath = this.getLogFilePath(dailyLog.date);
+    
+    try {
+      fs.writeFileSync(filePath, JSON.stringify(dailyLog, null, 2));
+    } catch (error) {
+      console.error(`Error saving daily log for ${dailyLog.date}:`, error);
+    }
+  }
+
+
 
 
 
