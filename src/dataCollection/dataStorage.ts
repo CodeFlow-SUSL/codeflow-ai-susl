@@ -177,6 +177,14 @@ export class DataStorage {
     private calculateProductivityScore(summary: any): number {
     let score = 50;
 
+        if (summary.totalDuration >= 240 && summary.totalDuration <= 360) {
+      score += 20;
+    } else if (summary.totalDuration > 360) {
+      score += 10;
+    } else {
+      score += 5;
+    }
+
 
 
 
