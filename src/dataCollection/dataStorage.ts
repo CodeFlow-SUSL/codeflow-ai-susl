@@ -69,6 +69,23 @@ export class DataStorage {
     this.saveDailyLog(dailyLog);
   }
 
+    private createEmptyDailyLog(date: string): DailyActivityLog {
+    return {
+      date,
+      sessions: [],
+      summary: {
+        totalDuration: 0,
+        totalKeystrokes: 0,
+        totalSaves: 0,
+        filesWorked: 0,
+        languagesUsed: 0,
+        mostActiveHour: 0,
+        productivityScore: 0
+      }
+    };
+  }
+
+
 
 
 
