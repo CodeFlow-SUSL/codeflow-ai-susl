@@ -241,6 +241,31 @@ export class DataStorage {
     return activities;
   }
 
+    public getAllDailyLogs(): DailyActivityLog[] {
+    const logs: DailyActivityLog[] = [];
+    
+    if (!fs.existsSync(this.storagePath)) {
+      return logs;
+    }
+    
+    const files = fs.readdirSync(this.storagePath);
+    
+    for (const file of files) {
+      if (file.startsWith('activity-') && file.endsWith('.json')) {
+        const dateStr = file.substring(9, file.length - 5);
+        const dailyLog = this.loadDailyLog(dateStr);
+        
+        if (dailyLog) {
+          logs.push(dailyLog);
+        }
+      }
+    }
+    
+    return logs.sort((a, b) => a.date.localeCompare(b.date));
+  }
+}
+
+
 
 
 
