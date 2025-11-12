@@ -153,6 +153,14 @@ export class DataStorage {
         hourlyActivity[hour]++;
       }
 
+            if (session.endTime) {
+        summary.totalDuration += (session.endTime - session.startTime) / (1000 * 60);
+      } else {
+        summary.totalDuration += (Date.now() - session.startTime) / (1000 * 60);
+      }
+    }
+
+
 
 
 
