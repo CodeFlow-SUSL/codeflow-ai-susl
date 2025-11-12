@@ -123,6 +123,12 @@ export class DataStorage {
       session.metadata.filesWorked.push(activity.data.filePath);
     }
 
+        if (activity.data.language && !session.metadata.languagesUsed.includes(activity.data.language)) {
+      session.metadata.languagesUsed.push(activity.data.language);
+    }
+  }
+
+
 
 
 
