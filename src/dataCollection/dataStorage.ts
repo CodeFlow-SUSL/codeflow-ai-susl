@@ -56,6 +56,14 @@ export class DataStorage {
       dailyLog = this.createEmptyDailyLog(today);
     }
 
+        let currentSession = dailyLog.sessions.find(session => !session.endTime);
+    
+    if (!currentSession) {
+      currentSession = this.createNewSession();
+      dailyLog.sessions.push(currentSession);
+    }
+
+
 
 
 
