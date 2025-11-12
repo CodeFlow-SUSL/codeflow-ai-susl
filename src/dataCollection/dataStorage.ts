@@ -63,6 +63,13 @@ export class DataStorage {
       dailyLog.sessions.push(currentSession);
     }
 
+        currentSession.activities.push(activity);
+    this.updateSessionMetadata(currentSession, activity);
+    this.updateDailySummary(dailyLog);
+    this.saveDailyLog(dailyLog);
+  }
+
+
 
 
 
