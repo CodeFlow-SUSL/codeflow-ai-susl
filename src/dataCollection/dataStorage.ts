@@ -207,6 +207,11 @@ export class DataStorage {
     return Math.min(100, Math.max(0, score));
   }
 
+    public endCurrentSession(): void {
+    const today = new Date().toISOString().split('T')[0];
+    const dailyLog = this.loadDailyLog(today);
+    
+    if (!dailyLog) return;
 
 
 
