@@ -172,6 +172,8 @@ export class DataStorage {
       }
     }
     summary.mostActiveHour = mostActiveHour;
+        summary.productivityScore = this.calculateProductivityScore(summary);
+  }
 
 
 
