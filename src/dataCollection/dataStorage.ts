@@ -85,6 +85,22 @@ export class DataStorage {
     };
   }
 
+    private createNewSession(): ActivitySession {
+    return {
+      id: this.generateSessionId(),
+      startTime: Date.now(),
+      activities: [],
+      metadata: {
+        totalKeystrokes: 0,
+        totalSaves: 0,
+        filesWorked: [],
+        languagesUsed: [],
+        commandsExecuted: []
+      }
+    };
+  }
+
+
 
 
 
