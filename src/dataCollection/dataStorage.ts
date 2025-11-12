@@ -104,6 +104,22 @@ export class DataStorage {
     return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 
+    private updateSessionMetadata(session: ActivitySession, activity: CodingActivity): void {
+    switch (activity.type) {
+      case 'keystroke':
+        session.metadata.totalKeystrokes += activity.data.keystrokes || 0;
+        break;
+      case 'save':
+        session.metadata.totalSaves += 1;
+        break;
+      case 'command':
+        if (activity.data.command && !session.metadata.commandsExecuted.includes(activity.data.command)) {
+          session.metadata.commandsExecuted.push(activity.data.command);
+        }
+        break;
+    }
+
+
 
 
 
