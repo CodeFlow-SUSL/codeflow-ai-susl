@@ -174,6 +174,8 @@ export class DataStorage {
     summary.mostActiveHour = mostActiveHour;
         summary.productivityScore = this.calculateProductivityScore(summary);
   }
+    private calculateProductivityScore(summary: any): number {
+    let score = 50;
 
 
 
