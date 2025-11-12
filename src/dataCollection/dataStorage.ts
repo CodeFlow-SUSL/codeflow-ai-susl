@@ -139,7 +139,6 @@ export class DataStorage {
         const allFiles = new Set<string>();
     const allLanguages = new Set<string>();
     const hourlyActivity = new Array(24).fill(0);
-    summary.totalDuration = 0;
 
         for (const session of dailyLog.sessions) {
       summary.totalKeystrokes += session.metadata.totalKeystrokes;
