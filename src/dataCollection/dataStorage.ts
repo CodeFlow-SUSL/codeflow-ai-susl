@@ -185,6 +185,15 @@ export class DataStorage {
       score += 5;
     }
 
+        const kpm = summary.totalDuration > 0 ? summary.totalKeystrokes / summary.totalDuration : 0;
+    if (kpm >= 30 && kpm <= 60) {
+      score += 15;
+    } else if (kpm > 60) {
+      score += 10;
+    } else {
+      score += 5;
+    }
+
 
 
 
