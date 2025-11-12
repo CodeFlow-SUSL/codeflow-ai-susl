@@ -5,6 +5,9 @@ import { DailyActivityLog, CodingActivity, ActivitySession, SessionMetadata } fr
 
 export class DataStorage {
       private context: vscode.ExtensionContext;
+        private storagePath: string;
+        
+
 
 
 
