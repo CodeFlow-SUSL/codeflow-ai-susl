@@ -148,6 +148,11 @@ export class DataStorage {
             session.metadata.filesWorked.forEach(file => allFiles.add(file));
       session.metadata.languagesUsed.forEach(lang => allLanguages.add(lang));
 
+            for (const activity of session.activities) {
+        const hour = new Date(activity.timestamp).getHours();
+        hourlyActivity[hour]++;
+      }
+
 
 
 
