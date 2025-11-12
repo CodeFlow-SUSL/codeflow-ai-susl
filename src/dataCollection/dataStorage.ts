@@ -18,6 +18,9 @@ export class DataStorage {
     }
   }
 
+    private getLogFilePath(date: string): string {
+    return path.join(this.storagePath, `activity-${date}.json`);
+  }
 
 
 
