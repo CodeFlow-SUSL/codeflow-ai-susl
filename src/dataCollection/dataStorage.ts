@@ -128,6 +128,15 @@ export class DataStorage {
     }
   }
 
+    private updateDailySummary(dailyLog: DailyActivityLog): void {
+    const summary = dailyLog.summary;
+    
+    summary.totalKeystrokes = 0;
+    summary.totalSaves = 0;
+    summary.filesWorked = 0;
+    summary.languagesUsed = 0;
+
+
 
 
 
