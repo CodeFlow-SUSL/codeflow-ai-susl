@@ -200,6 +200,13 @@ export class DataStorage {
       score += 5;
     }
 
+        if (summary.languagesUsed >= 2) {
+      score += 5;
+    }
+    
+    return Math.min(100, Math.max(0, score));
+  }
+
 
 
 
