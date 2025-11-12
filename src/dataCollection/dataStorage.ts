@@ -5,8 +5,15 @@ import { DailyActivityLog, CodingActivity, ActivitySession, SessionMetadata } fr
 
 export class DataStorage {
       private context: vscode.ExtensionContext;
-        private storagePath: string;
-        
+      private storagePath: string;
+
+      constructor(context: vscode.ExtensionContext) {
+        this.context = context;
+        this.storagePath = context.globalStorageUri.fsPath;
+        this.ensureStorageDirectory();
+  }
+
+
 
 
 
