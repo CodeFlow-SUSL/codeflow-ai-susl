@@ -12,6 +12,11 @@ export class DataStorage {
         this.storagePath = context.globalStorageUri.fsPath;
         this.ensureStorageDirectory();
   }
+    private ensureStorageDirectory(): void {
+    if (!fs.existsSync(this.storagePath)) {
+      fs.mkdirSync(this.storagePath, { recursive: true });
+    }
+  }
 
 
 
