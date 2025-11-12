@@ -163,6 +163,17 @@ export class DataStorage {
         summary.filesWorked = allFiles.size;
     summary.languagesUsed = allLanguages.size;
 
+        let maxActivity = 0;
+    let mostActiveHour = 0;
+    for (let i = 0; i < 24; i++) {
+      if (hourlyActivity[i] > maxActivity) {
+        maxActivity = hourlyActivity[i];
+        mostActiveHour = i;
+      }
+    }
+    summary.mostActiveHour = mostActiveHour;
+
+
 
 
 
