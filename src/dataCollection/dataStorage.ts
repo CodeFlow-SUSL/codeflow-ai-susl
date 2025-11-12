@@ -119,6 +119,11 @@ export class DataStorage {
         break;
     }
 
+        if (activity.data.filePath && !session.metadata.filesWorked.includes(activity.data.filePath)) {
+      session.metadata.filesWorked.push(activity.data.filePath);
+    }
+
+
 
 
 
