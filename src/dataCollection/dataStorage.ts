@@ -194,6 +194,13 @@ export class DataStorage {
       score += 5;
     }
 
+        if (summary.filesWorked >= 3 && summary.filesWorked <= 7) {
+      score += 10;
+    } else {
+      score += 5;
+    }
+
+
 
 
 
