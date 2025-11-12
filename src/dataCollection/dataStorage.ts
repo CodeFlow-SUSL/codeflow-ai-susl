@@ -136,6 +136,12 @@ export class DataStorage {
     summary.filesWorked = 0;
     summary.languagesUsed = 0;
 
+        const allFiles = new Set<string>();
+    const allLanguages = new Set<string>();
+    const hourlyActivity = new Array(24).fill(0);
+    summary.totalDuration = 0;
+
+
 
 
 
