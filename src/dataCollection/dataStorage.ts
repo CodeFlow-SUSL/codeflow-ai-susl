@@ -145,6 +145,10 @@ export class DataStorage {
       summary.totalKeystrokes += session.metadata.totalKeystrokes;
       summary.totalSaves += session.metadata.totalSaves;
 
+            session.metadata.filesWorked.forEach(file => allFiles.add(file));
+      session.metadata.languagesUsed.forEach(lang => allLanguages.add(lang));
+
+
 
 
 
