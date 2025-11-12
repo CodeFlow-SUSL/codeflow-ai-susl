@@ -222,6 +222,25 @@ export class DataStorage {
     }
   }
 
+    public getActivitiesForDateRange(startDate: string, endDate: string): CodingActivity[] {
+    const activities: CodingActivity[] = [];
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      const dateStr = d.toISOString().split('T')[0];
+      const dailyLog = this.loadDailyLog(dateStr);
+      
+      if (dailyLog) {
+        for (const session of dailyLog.sessions) {
+          activities.push(...session.activities);
+        }
+      }
+    }
+    
+    return activities;
+  }
+
 
 
 
