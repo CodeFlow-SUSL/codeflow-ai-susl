@@ -29,6 +29,16 @@ export class DataStorage {
       return null;
     }
 
+        try {
+      const rawData = fs.readFileSync(filePath, 'utf8');
+      return JSON.parse(rawData) as DailyActivityLog;
+    } catch (error) {
+      console.error(`Error loading daily log for ${date}:`, error);
+      return null;
+    }
+  }
+
+
 
 
 
