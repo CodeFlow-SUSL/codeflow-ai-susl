@@ -42,7 +42,54 @@ export const LoginComponent: React.FC<LoginComponentProps> = ({
     }
   };
 
-  return (
-    <div>Login Component Placeholder</div>
+  return React.createElement(
+    'div',
+    { className: 'auth-container' },
+    React.createElement('h2', null, 'Login to CodeFlow'),
+    error && React.createElement('div', { className: 'error-message' }, error),
+    React.createElement(
+      'form',
+      { onSubmit: handleSubmit },
+      React.createElement(
+        'div',
+        { className: 'form-group' },
+        React.createElement('label', { htmlFor: 'email' }, 'Email'),
+        React.createElement('input', {
+          type: 'email',
+          id: 'email',
+          name: 'email',
+          value: credentials.email,
+          onChange: handleInputChange,
+          required: true
+        })
+      ),
+      React.createElement(
+        'div',
+        { className: 'form-group' },
+        React.createElement('label', { htmlFor: 'password' }, 'Password'),
+        React.createElement('input', {
+          type: 'password',
+          id: 'password',
+          name: 'password',
+          value: credentials.password,
+          onChange: handleInputChange,
+          required: true
+        })
+      ),
+      React.createElement(
+        'button',
+        { type: 'submit', disabled: isLoading },
+        isLoading ? 'Logging in...' : 'Login'
+      )
+    ),
+    React.createElement(
+      'div',
+      { className: 'auth-links' },
+      React.createElement(
+        'button',
+        { type: 'button', onClick: onSignUpClick },
+        "Don't have an account? Sign up"
+      )
+    )
   );
 };
