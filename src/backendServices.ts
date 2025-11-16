@@ -115,3 +115,66 @@ export class BackendServices {
         return true;
     }
 }
+
+export class BackendServicesModule {
+    private context: vscode.ExtensionContext;
+    private authService: AuthService;
+
+    constructor(context: vscode.ExtensionContext) {
+        this.context = context;
+        this.authService = new AuthService(context);
+    }
+
+    public getAuthService(): AuthService {
+        return this.authService;
+    }
+
+    public dispose(): void {
+        // Cleanup if needed
+    }
+}
+
+class AuthService {
+    private context: vscode.ExtensionContext;
+
+    constructor(context: vscode.ExtensionContext) {
+        this.context = context;
+    }
+
+    public async logout(): Promise<void> {
+        try {
+            // Clear stored auth data
+            await this.context.globalState.update('codeflow-authToken', undefined);
+            await this.context.globalState.update('codeflow-userId', undefined);
+            
+            // Disable cloud sync
+            const config = vscode.workspace.getConfiguration('codeflow');
+            await config.update('cloudSync', false, vscode.ConfigurationTarget.Global);
+            
+            vscode.window.showInformationMessage('Successfully logged out from CodeFlow');
+        } catch (error) {
+            vscode.window.showErrorMessage(`Logout failed: ${error}`);
+        }
+    }
+
+    public async upgradeToPro(): Promise<void> {
+        try {
+            const result = await vscode.window.showInformationMessage(
+                'Upgrade to CodeFlow Pro for advanced features!',
+                { modal: true },
+                'Learn More',
+                'Upgrade Now'
+            );
+
+            if (result === 'Upgrade Now') {
+                // Open upgrade page
+                vscode.env.openExternal(vscode.Uri.parse('https://codeflow.example/upgrade'));
+            } else if (result === 'Learn More') {
+                // Open features page
+                vscode.env.openExternal(vscode.Uri.parse('https://codeflow.example/features'));
+            }
+        } catch (error) {
+            vscode.window.showErrorMessage(`Upgrade failed: ${error}`);
+        }
+    }
+}

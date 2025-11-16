@@ -3,7 +3,7 @@ import { DataCollector } from './dataCollector';
 import { AIAnalyzer } from './aiAnalyzer';
 import { VisualizationPanel } from './visualization';
 import { GamificationSystem } from './gamification';
-import { BackendServices } from './backendServices';
+import { BackendServices, BackendServicesModule } from './backendServices';
 import { spawn } from 'child_process';
 import * as path from 'path';
 
@@ -16,6 +16,7 @@ export function activate(context: vscode.ExtensionContext) {
     const visualizationPanel = new VisualizationPanel(context);
     const gamificationSystem = new GamificationSystem(context);
     const backendServices = new BackendServices(context);
+    const backendServicesModule = new BackendServicesModule(context);
     
     // Register commands
     const showReportCommand = vscode.commands.registerCommand('codeflow.showReport', async () => {
@@ -262,6 +263,20 @@ export function activate(context: vscode.ExtensionContext) {
             vscode.window.showErrorMessage(`Error exporting data: ${error}`);
         }
     });
+
+    // Register auth-related commands
+    const loginCommand = vscode.commands.registerCommand('codeflow.login', async () => {
+        // Show login UI
+        vscode.window.showInformationMessage('Login UI will be displayed here');
+    });
+    
+    const logoutCommand = vscode.commands.registerCommand('codeflow.logout', async () => {
+        await backendServicesModule.getAuthService().logout();
+    });
+    
+    const upgradeToProCommand = vscode.commands.registerCommand('codeflow.upgradeToPro', async () => {
+        await backendServicesModule.getAuthService().upgradeToPro();
+    });
     
     // Register status bar item
     const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
@@ -273,6 +288,7 @@ export function activate(context: vscode.ExtensionContext) {
     // Add to subscriptions
     context.subscriptions.push(
         dataCollector,
+        backendServicesModule,
         showReportCommand,
         toggleTrackingCommand,
         showBadgesCommand,
@@ -283,6 +299,9 @@ export function activate(context: vscode.ExtensionContext) {
         viewStatsCommand,
         comparePerformanceCommand,
         exportDataCommand,
+        loginCommand,
+        logoutCommand,
+        upgradeToProCommand,
         statusBarItem
     );
     
