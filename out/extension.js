@@ -51,6 +51,7 @@ function activate(context) {
     const visualizationPanel = new visualization_1.VisualizationPanel(context);
     const gamificationSystem = new gamification_1.GamificationSystem(context);
     const backendServices = new backendServices_1.BackendServices(context);
+    const backendServicesModule = new backendServices_1.BackendServicesModule(context);
     // Register commands
     const showReportCommand = vscode.commands.registerCommand('codeflow.showReport', async () => {
         try {
@@ -262,6 +263,17 @@ function activate(context) {
             vscode.window.showErrorMessage(`Error exporting data: ${error}`);
         }
     });
+    // Register auth-related commands
+    const loginCommand = vscode.commands.registerCommand('codeflow.login', async () => {
+        // Show login UI
+        vscode.window.showInformationMessage('Login UI will be displayed here');
+    });
+    const logoutCommand = vscode.commands.registerCommand('codeflow.logout', async () => {
+        await backendServicesModule.getAuthService().logout();
+    });
+    const upgradeToProCommand = vscode.commands.registerCommand('codeflow.upgradeToPro', async () => {
+        await backendServicesModule.getAuthService().upgradeToPro();
+    });
     // Register status bar item
     const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
     statusBarItem.text = "$(chart-line) CodeFlow";
@@ -269,7 +281,7 @@ function activate(context) {
     statusBarItem.command = 'codeflow.showReport';
     statusBarItem.show();
     // Add to subscriptions
-    context.subscriptions.push(dataCollector, showReportCommand, toggleTrackingCommand, showBadgesCommand, enableCloudSyncCommand, configureAPICommand, trainTFModelCommand, setGoalCommand, viewStatsCommand, comparePerformanceCommand, exportDataCommand, statusBarItem);
+    context.subscriptions.push(dataCollector, backendServicesModule, showReportCommand, toggleTrackingCommand, showBadgesCommand, enableCloudSyncCommand, configureAPICommand, trainTFModelCommand, setGoalCommand, viewStatsCommand, comparePerformanceCommand, exportDataCommand, loginCommand, logoutCommand, upgradeToProCommand, statusBarItem);
     // Check for new badges periodically
     setInterval(() => {
         const activities = gamificationSystem.getActivitiesForLastWeek();

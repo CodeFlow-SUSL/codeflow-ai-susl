@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.BackendServices = void 0;
+exports.BackendServicesModule = exports.BackendServices = void 0;
 const vscode = __importStar(require("vscode"));
 class BackendServices {
     context;
@@ -143,4 +143,55 @@ class BackendServices {
     }
 }
 exports.BackendServices = BackendServices;
+class BackendServicesModule {
+    context;
+    authService;
+    constructor(context) {
+        this.context = context;
+        this.authService = new AuthService(context);
+    }
+    getAuthService() {
+        return this.authService;
+    }
+    dispose() {
+        // Cleanup if needed
+    }
+}
+exports.BackendServicesModule = BackendServicesModule;
+class AuthService {
+    context;
+    constructor(context) {
+        this.context = context;
+    }
+    async logout() {
+        try {
+            // Clear stored auth data
+            await this.context.globalState.update('codeflow-authToken', undefined);
+            await this.context.globalState.update('codeflow-userId', undefined);
+            // Disable cloud sync
+            const config = vscode.workspace.getConfiguration('codeflow');
+            await config.update('cloudSync', false, vscode.ConfigurationTarget.Global);
+            vscode.window.showInformationMessage('Successfully logged out from CodeFlow');
+        }
+        catch (error) {
+            vscode.window.showErrorMessage(`Logout failed: ${error}`);
+        }
+    }
+    async upgradeToPro() {
+        try {
+            const result = await vscode.window.showInformationMessage('Upgrade to CodeFlow Pro for advanced features!', { modal: true }, 'Learn More', 'Upgrade Now');
+            if (result === 'Upgrade Now') {
+                // Open upgrade page
+                vscode.env.openExternal(vscode.Uri.parse('https://codeflow.example/upgrade'));
+            }
+            else if (result === 'Learn More') {
+                // Open features page
+                vscode.env.openExternal(vscode.Uri.parse('https://codeflow.example/features'));
+            }
+        }
+        catch (error) {
+            vscode.window.showErrorMessage(`Upgrade failed: ${error}`);
+        }
+    }
+}
 //# sourceMappingURL=backendServices.js.map
