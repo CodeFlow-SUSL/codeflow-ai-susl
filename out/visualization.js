@@ -114,9 +114,9 @@ class VisualizationPanel {
     <link href="${styleUri}" rel="stylesheet">
     </head>
     <body>
-    <button class="theme-toggle" onclick="refreshDashboard()" aria-label="Refresh dashboard">
+    <button class="refresh-toggle" onclick="refreshDashboard()" aria-label="Refresh dashboard">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M13.65 2.35C12.2 0.9 10.21 0 8 0C3.58 0 0.01 3.58 0.01 8C0.01 12.42 3.58 16 8 16C11.73 16 14.84 13.45 15.73 10H13.65C12.83 12.33 10.61 14 8 14C4.69 14 2 11.31 2 8C2 4.69 4.69 2 8 2C9.66 2 11.14 2.69 12.22 3.78L9 7H16V0L13.65 2.35Z" fill="currentColor"/>
+                <path d="M13.65 2.35C12.2 0.9 10.21 0 8 0C3.58 0 0.01 3.58 0.01 8C0.01 12.42 3.58 16 8 16C11.73 16 14.84 13.45 15.73 10H13.65C12.83 12.33 10.61 14 8 14C4.69 14 2 11.31 2 8C2 4.69 4.69 2 8 2C9.66 2 11.14 2.69 12.22 3.78L9 7H16V0L13.65 2.35Z" fill="#0066cc"/>
                 </svg>
     </button>
     <div class="container">
@@ -289,7 +289,7 @@ class VisualizationPanel {
     setInterval(updateDateTime, 1000);
 
     // Chart color schemes
-    const gradientColors = ['#667eea', '#764ba2', '#f093fb', '#4facfe', '#43e97b', '#fa709a', '#fee140'];
+    const gradientColors = ['#1e3a8a', '#2563eb', '#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe', '#dbeafe'];
     const chartOptions = {
         responsive: true,
         maintainAspectRatio: false,
@@ -314,8 +314,8 @@ class VisualizationPanel {
     // Daily Coding Hours (Line)
     const dailyCtx = document.getElementById('dailyChart').getContext('2d');
     const dailyGradient = dailyCtx.createLinearGradient(0, 0, 0, 400);
-    dailyGradient.addColorStop(0, 'rgba(102, 126, 234, 0.6)');
-    dailyGradient.addColorStop(1, 'rgba(118, 75, 162, 0.1)');
+    dailyGradient.addColorStop(0, 'rgba(37, 99, 235, 0.6)');
+    dailyGradient.addColorStop(1, 'rgba(30, 58, 138, 0.1)');
 
     const dailyLabels = dailyCoding.map(item => formatDayLabel(item.date));
     const dailyHours = dailyCoding.map(item => Number((item.minutes / 60).toFixed(2)));
@@ -328,13 +328,13 @@ class VisualizationPanel {
             label: 'Hours coded',
             data: dailyHours,
             backgroundColor: dailyGradient,
-            borderColor: '#667eea',
+            borderColor: '#2563eb',
             borderWidth: 3,
             fill: true,
             tension: 0.35,
             pointRadius: 5,
             pointHoverRadius: 7,
-            pointBackgroundColor: '#667eea',
+            pointBackgroundColor: '#2563eb',
             pointBorderColor: '#fff',
             pointBorderWidth: 2
         }]
@@ -383,8 +383,8 @@ class VisualizationPanel {
     // Commands Chart (Bar with gradient)
     const commandCtx = document.getElementById('commandChart').getContext('2d');
     const commandGradient = commandCtx.createLinearGradient(0, 0, 0, 400);
-    commandGradient.addColorStop(0, 'rgba(102, 126, 234, 0.8)');
-    commandGradient.addColorStop(1, 'rgba(118, 75, 162, 0.8)');
+    commandGradient.addColorStop(0, 'rgba(37, 99, 235, 0.8)');
+    commandGradient.addColorStop(1, 'rgba(30, 58, 138, 0.8)');
     new Chart(commandCtx, {
         type: 'bar',
         data: {
@@ -416,8 +416,8 @@ class VisualizationPanel {
     // Files Chart (Horizontal Bar)
     const fileCtx = document.getElementById('fileChart').getContext('2d');
     const fileGradient = fileCtx.createLinearGradient(0, 0, 400, 0);
-    fileGradient.addColorStop(0, 'rgba(67, 233, 123, 0.8)');
-    fileGradient.addColorStop(1, 'rgba(56, 239, 125, 0.8)');
+    fileGradient.addColorStop(0, 'rgba(96, 165, 250, 0.8)');
+    fileGradient.addColorStop(1, 'rgba(59, 130, 246, 0.8)');
 
     new Chart(fileCtx, {
         type: 'bar',
