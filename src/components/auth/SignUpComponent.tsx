@@ -1,7 +1,17 @@
 import * as React from 'react';
 import { useState } from 'react';
-import { SignUpCredentials } from '../../backendServices/types';
-import { AuthService } from '../../backendServices/authService';
+
+// Types defined locally since backend services don't exist yet
+interface SignUpCredentials {
+    email: string;
+    password: string;
+    confirmPassword: string;
+}
+
+// Mock auth service interface
+interface AuthService {
+    signUp(credentials: SignUpCredentials): Promise<void>;
+}
 
 interface SignUpComponentProps {
   authService: AuthService;
@@ -24,7 +34,7 @@ export const SignUpComponent: React.FC<SignUpComponentProps> = ({
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setCredentials(prev => ({ ...prev, [name]: value }));
+    setCredentials((prev: SignUpCredentials) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

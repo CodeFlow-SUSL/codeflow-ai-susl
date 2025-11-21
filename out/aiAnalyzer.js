@@ -66,13 +66,13 @@ class AIAnalyzer {
         }
         // Choose analysis method based on configuration
         if (this.useExternalAPI && this.apiEndpoint && this.apiKey) {
-            return this.analyzeWithExternalAPI(activities);
+            return this.analyzeWithExternalAPI(activities, days);
         }
         else if (this.useTFModel) {
-            return this.analyzeWithTFModel(activities);
+            return this.analyzeWithTFModel(activities, days);
         }
         else {
-            return this.performLocalAnalysis(activities);
+            return this.performLocalAnalysis(activities, days);
         }
     }
     getActivitiesForDate(date) {
@@ -83,7 +83,7 @@ class AIAnalyzer {
         }
         return JSON.parse(fs.readFileSync(filePath, 'utf8'));
     }
-    async analyzeWithExternalAPI(activities) {
+    async analyzeWithExternalAPI(activities, daysRequested) {
         try {
             // Prepare data for API
             const apiData = {
@@ -103,15 +103,15 @@ class AIAnalyzer {
                 throw new Error(`API request failed with status ${response.status}`);
             }
             const insight = await response.json();
-            return insight;
+            return this.mergeWithDerivedMetrics(insight, activities, daysRequested);
         }
         catch (error) {
             vscode.window.showErrorMessage(`Error analyzing data with external API: ${error}`);
             // Fall back to local analysis
-            return this.performLocalAnalysis(activities);
+            return this.performLocalAnalysis(activities, daysRequested);
         }
     }
-    async analyzeWithTFModel(activities) {
+    async analyzeWithTFModel(activities, daysRequested) {
         try {
             // Prepare data for TensorFlow.js model
             const tfData = this.prepareTFData(activities);
@@ -126,7 +126,7 @@ class AIAnalyzer {
             // Parse the result
             const tfResult = JSON.parse(result);
             // Get local analysis for additional insights
-            const localInsight = this.performLocalAnalysis(activities);
+            const localInsight = this.performLocalAnalysis(activities, daysRequested);
             // Combine TensorFlow.js results with local insights
             return {
                 ...localInsight,
@@ -140,7 +140,7 @@ class AIAnalyzer {
         catch (error) {
             vscode.window.showErrorMessage(`Error analyzing data with TensorFlow.js model: ${error}`);
             // Fall back to local analysis
-            return this.performLocalAnalysis(activities);
+            return this.performLocalAnalysis(activities, daysRequested);
         }
     }
     prepareTFData(activities) {
@@ -233,53 +233,199 @@ class AIAnalyzer {
             });
         });
     }
-    performLocalAnalysis(activities) {
+    performLocalAnalysis(activities, daysRequested) {
         // Calculate productivity score (0-100)
         const productivityScore = this.calculateProductivityScore(activities);
-        // Find most used commands
+        // Aggregate command and keystroke activity
         const commandCounts = {};
+        const fileCounts = {};
+        const languageCounts = {};
+        const filesWorked = new Set();
+        const languagesWorked = new Set();
+        let totalKeystrokes = 0;
         activities.forEach(activity => {
             if (activity.command) {
                 commandCounts[activity.command] = (commandCounts[activity.command] || 0) + 1;
             }
+            if (activity.file) {
+                fileCounts[activity.file] = (fileCounts[activity.file] || 0) + 1;
+                filesWorked.add(activity.file);
+            }
+            if (activity.language) {
+                languageCounts[activity.language] = (languageCounts[activity.language] || 0) + 1;
+                languagesWorked.add(activity.language);
+            }
+            if (activity.keystrokes) {
+                totalKeystrokes += activity.keystrokes;
+            }
         });
+        const totalCommandsExecuted = Object.values(commandCounts).reduce((sum, count) => sum + count, 0);
         const mostUsedCommands = Object.entries(commandCounts)
             .map(([command, count]) => ({ command, count }))
             .sort((a, b) => b.count - a.count)
             .slice(0, 5);
-        // Find most worked files
-        const fileTimes = {};
-        activities.forEach(activity => {
-            if (activity.file) {
-                fileTimes[activity.file] = (fileTimes[activity.file] || 0) + 1;
-            }
-        });
-        const mostWorkedFiles = Object.entries(fileTimes)
-            .map(([file, time]) => ({ file, time }))
+        const timeMetrics = this.computeTimeMetrics(activities, daysRequested);
+        let mostWorkedFiles = Array.from(timeMetrics.fileDurations.entries())
+            .map(([file, minutes]) => ({ file, time: Number(minutes.toFixed(1)) }))
             .sort((a, b) => b.time - a.time)
             .slice(0, 5);
-        // Calculate language distribution
-        const languageCounts = {};
-        activities.forEach(activity => {
-            if (activity.language) {
-                languageCounts[activity.language] = (languageCounts[activity.language] || 0) + 1;
-            }
-        });
+        // Fallback to interaction counts if timing information is limited
+        if (mostWorkedFiles.length === 0 && Object.keys(fileCounts).length > 0) {
+            mostWorkedFiles = Object.entries(fileCounts)
+                .map(([file, time]) => ({ file, time }))
+                .sort((a, b) => b.time - a.time)
+                .slice(0, 5);
+        }
         const totalLanguageActivities = Object.values(languageCounts).reduce((sum, count) => sum + count, 0);
-        const languageDistribution = Object.entries(languageCounts)
-            .map(([language, count]) => ({
-            language,
-            percentage: Math.round((count / totalLanguageActivities) * 100)
-        }))
-            .sort((a, b) => b.percentage - a.percentage);
-        // Generate suggestions
-        const suggestions = this.generateSuggestions(activities, commandCounts, fileTimes);
+        const languageDistribution = totalLanguageActivities === 0
+            ? []
+            : Object.entries(languageCounts)
+                .map(([language, count]) => ({
+                language,
+                percentage: Math.round((count / totalLanguageActivities) * 100)
+            }))
+                .sort((a, b) => b.percentage - a.percentage);
+        const suggestions = this.generateSuggestions(activities, commandCounts, fileCounts);
         return {
             productivityScore,
             mostUsedCommands,
             mostWorkedFiles,
             languageDistribution,
-            suggestions
+            suggestions,
+            dailyCodingMinutes: timeMetrics.dailyCodingMinutes,
+            totalActiveMinutes: timeMetrics.totalActiveMinutes,
+            streakDays: timeMetrics.streakDays,
+            totalKeystrokes,
+            totalCommandsExecuted,
+            uniqueFilesWorked: filesWorked.size,
+            uniqueLanguages: languagesWorked.size,
+            activeHourRange: {
+                earliest: timeMetrics.earliestHour,
+                latest: timeMetrics.latestHour
+            },
+            fileSwitchCount: timeMetrics.fileSwitchCount
+        };
+    }
+    mergeWithDerivedMetrics(baseInsight, activities, daysRequested) {
+        const localInsight = this.performLocalAnalysis(activities, daysRequested);
+        return {
+            ...localInsight,
+            ...baseInsight,
+            mostUsedCommands: baseInsight.mostUsedCommands?.length ? baseInsight.mostUsedCommands : localInsight.mostUsedCommands,
+            mostWorkedFiles: baseInsight.mostWorkedFiles?.length ? baseInsight.mostWorkedFiles : localInsight.mostWorkedFiles,
+            languageDistribution: baseInsight.languageDistribution?.length ? baseInsight.languageDistribution : localInsight.languageDistribution,
+            suggestions: baseInsight.suggestions?.length ? baseInsight.suggestions : localInsight.suggestions,
+            dailyCodingMinutes: baseInsight.dailyCodingMinutes?.length ? baseInsight.dailyCodingMinutes : localInsight.dailyCodingMinutes,
+            totalActiveMinutes: baseInsight.totalActiveMinutes ?? localInsight.totalActiveMinutes,
+            streakDays: baseInsight.streakDays ?? localInsight.streakDays,
+            totalKeystrokes: baseInsight.totalKeystrokes ?? localInsight.totalKeystrokes,
+            totalCommandsExecuted: baseInsight.totalCommandsExecuted ?? localInsight.totalCommandsExecuted,
+            uniqueFilesWorked: baseInsight.uniqueFilesWorked ?? localInsight.uniqueFilesWorked,
+            uniqueLanguages: baseInsight.uniqueLanguages ?? localInsight.uniqueLanguages,
+            activeHourRange: baseInsight.activeHourRange ?? localInsight.activeHourRange,
+            fileSwitchCount: baseInsight.fileSwitchCount ?? localInsight.fileSwitchCount
+        };
+    }
+    computeTimeMetrics(activities, daysRequested) {
+        const dayMap = new Map();
+        const dayOrder = [];
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const totalDays = Math.max(1, daysRequested);
+        for (let offset = totalDays - 1; offset >= 0; offset--) {
+            const date = new Date(today);
+            date.setDate(today.getDate() - offset);
+            const dateKey = date.toISOString().split('T')[0];
+            dayMap.set(dateKey, 0);
+            dayOrder.push(dateKey);
+        }
+        if (activities.length === 0) {
+            const baseline = dayOrder.map(date => ({ date, minutes: 0 }));
+            return {
+                dailyCodingMinutes: baseline,
+                totalActiveMinutes: 0,
+                streakDays: 0,
+                earliestHour: null,
+                latestHour: null,
+                fileSwitchCount: 0,
+                fileDurations: new Map()
+            };
+        }
+        const sortedActivities = [...activities].sort((a, b) => a.timestamp - b.timestamp);
+        const fileDurations = new Map();
+        const MAX_CONTINUOUS_GAP = 10 * 60 * 1000; // 10 minutes
+        const SESSION_PADDING = 5 * 60 * 1000; // 5 minutes
+        let earliestHour = null;
+        let latestHour = null;
+        let fileSwitchCount = 0;
+        let previous;
+        const addMinutes = (timestamp, minutes, file) => {
+            const dateKey = new Date(timestamp).toISOString().split('T')[0];
+            if (!dayMap.has(dateKey)) {
+                dayMap.set(dateKey, 0);
+                dayOrder.push(dateKey);
+            }
+            dayMap.set(dateKey, (dayMap.get(dateKey) || 0) + minutes);
+            if (file) {
+                fileDurations.set(file, (fileDurations.get(file) || 0) + minutes);
+            }
+        };
+        for (const activity of sortedActivities) {
+            const hour = new Date(activity.timestamp).getHours();
+            earliestHour = earliestHour === null ? hour : Math.min(earliestHour, hour);
+            latestHour = latestHour === null ? hour : Math.max(latestHour, hour);
+            if (!previous) {
+                previous = activity;
+                continue;
+            }
+            const diff = activity.timestamp - previous.timestamp;
+            let minutesToAdd = 0;
+            if (diff > 0) {
+                if (diff <= MAX_CONTINUOUS_GAP) {
+                    minutesToAdd = diff / 60000;
+                }
+                else {
+                    minutesToAdd = SESSION_PADDING / 60000;
+                }
+            }
+            if (minutesToAdd > 0) {
+                addMinutes(previous.timestamp, minutesToAdd, previous.file);
+            }
+            if (previous.file && activity.file && previous.file !== activity.file) {
+                fileSwitchCount++;
+            }
+            previous = activity;
+        }
+        if (previous) {
+            const paddingMinutes = SESSION_PADDING / 60000;
+            addMinutes(previous.timestamp, paddingMinutes, previous.file);
+        }
+        const uniqueDayOrder = Array.from(new Set(dayOrder)).sort();
+        if (uniqueDayOrder.length > totalDays) {
+            uniqueDayOrder.splice(0, uniqueDayOrder.length - totalDays);
+        }
+        const dailyCodingMinutes = uniqueDayOrder.map(date => ({
+            date,
+            minutes: Number(((dayMap.get(date) || 0)).toFixed(1))
+        }));
+        const totalActiveMinutes = dailyCodingMinutes.reduce((sum, day) => sum + day.minutes, 0);
+        let streakDays = 0;
+        for (let i = dailyCodingMinutes.length - 1; i >= 0; i--) {
+            if (dailyCodingMinutes[i].minutes > 0) {
+                streakDays++;
+            }
+            else {
+                break;
+            }
+        }
+        return {
+            dailyCodingMinutes,
+            totalActiveMinutes,
+            streakDays,
+            earliestHour,
+            latestHour,
+            fileSwitchCount,
+            fileDurations
         };
     }
     calculateProductivityScore(activities) {
@@ -300,7 +446,7 @@ class AIAnalyzer {
         score += fileFactor;
         return Math.round(Math.min(score, 100));
     }
-    generateSuggestions(activities, commandCounts, fileTimes) {
+    generateSuggestions(activities, commandCounts, fileCounts) {
         const suggestions = [];
         // Check for repetitive commands
         const totalCommands = Object.values(commandCounts).reduce((sum, count) => sum + count, 0);

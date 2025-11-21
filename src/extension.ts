@@ -7,6 +7,11 @@ import { BackendServices, BackendServicesModule } from './backendServices';
 import { spawn } from 'child_process';
 import * as path from 'path';
 
+// TODO: Fix React component compilation issues
+// import { LoginComponent } from './components/auth/LoginComponent';
+// import { SignUpComponent } from './components/auth/SignUpComponent';
+// import { AccountSettingsComponent } from './components/settings/AccountSettingsComponent';
+
 export function activate(context: vscode.ExtensionContext) {
     console.log('CodeFlow AI is now active');
     
@@ -17,6 +22,20 @@ export function activate(context: vscode.ExtensionContext) {
     const gamificationSystem = new GamificationSystem(context);
     const backendServices = new BackendServices(context);
     const backendServicesModule = new BackendServicesModule(context);
+    
+    // Set up refresh callback for visualization panel
+    visualizationPanel.setRefreshCallback(async () => {
+        try {
+            const insight = await aiAnalyzer.analyzeData(7);
+            const activities = gamificationSystem.getActivitiesForLastWeek();
+            gamificationSystem.checkForNewBadges(activities);
+            visualizationPanel.show(insight);
+            const progress = gamificationSystem.getUserProgress();
+            backendServices.syncData(insight, progress);
+        } catch (error) {
+            vscode.window.showErrorMessage(`Error refreshing report: ${error}`);
+        }
+    });
     
     // Register commands
     const showReportCommand = vscode.commands.registerCommand('codeflow.showReport', async () => {
@@ -278,12 +297,40 @@ export function activate(context: vscode.ExtensionContext) {
         await backendServicesModule.getAuthService().upgradeToPro();
     });
     
-    // Register status bar item
+    // Register status bar item (CodeFlow icon)
     const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
-    statusBarItem.text = "$(chart-line) CodeFlow";
-    statusBarItem.tooltip = "Show CodeFlow Report";
+    statusBarItem.text = '$(rocket) CodeFlow';
+    statusBarItem.tooltip = 'CodeFlow AI - Click to view weekly report';
     statusBarItem.command = 'codeflow.showReport';
+    statusBarItem.color = new vscode.ThemeColor('statusBarItem.prominentForeground');
+    statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.prominentBackground');
     statusBarItem.show();
+
+    // Update status bar based on tracking state
+    const updateStatusBar = () => {
+        const config = vscode.workspace.getConfiguration('codeflow');
+        const isEnabled = config.get('enabled', true);
+        
+        if (isEnabled) {
+            statusBarItem.text = '$(rocket) CodeFlow';
+            statusBarItem.color = new vscode.ThemeColor('statusBarItem.prominentForeground');
+            statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.prominentBackground');
+        } else {
+            statusBarItem.text = '$(circle-slash) CodeFlow';
+            statusBarItem.color = new vscode.ThemeColor('statusBarItem.warningForeground');
+            statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
+        }
+    };
+
+    // Initial status bar update
+    updateStatusBar();
+
+    // Listen for configuration changes to update status bar
+    const configWatcher = vscode.workspace.onDidChangeConfiguration((event) => {
+        if (event.affectsConfiguration('codeflow.enabled')) {
+            updateStatusBar();
+        }
+    });
     
     // Add to subscriptions
     context.subscriptions.push(
@@ -302,7 +349,8 @@ export function activate(context: vscode.ExtensionContext) {
         loginCommand,
         logoutCommand,
         upgradeToProCommand,
-        statusBarItem
+        statusBarItem,
+        configWatcher
     );
     
     // Check for new badges periodically

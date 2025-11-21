@@ -1,8 +1,37 @@
 import * as React from 'react';
 import { useState, useEffect } from 'react';
-import { User, PaymentMethod, SubscriptionPlan } from '../../backendServices/types';
-import { AuthService } from '../../backendServices/authService';
-import { ApiService } from '../../backendServices/apiService';
+
+// Types defined locally since backend services don't exist yet
+interface User {
+    id: string;
+    email: string;
+    name: string;
+}
+
+interface PaymentMethod {
+    id: string;
+    type: string;
+    last4: string;
+}
+
+interface SubscriptionPlan {
+    id: string;
+    name: string;
+    price: number;
+}
+
+// Mock service interfaces
+interface AuthService {
+    getCurrentUser(): Promise<User>;
+    updateProfile(data: any): Promise<void>;
+    logout(): Promise<void>;
+}
+
+interface ApiService {
+    getPaymentMethods(): Promise<PaymentMethod[]>;
+    getSubscriptionPlan(): Promise<SubscriptionPlan>;
+    updateSubscription(planId: string): Promise<void>;
+}
 
 interface AccountSettingsComponentProps {
   authService: AuthService;

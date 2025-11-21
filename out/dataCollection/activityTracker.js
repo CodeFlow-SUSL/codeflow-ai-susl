@@ -122,16 +122,8 @@ class ActivityTracker {
                 data: { filePath, language }
             });
         }));
-        this.disposables.push(vscode.commands.onDidExecuteCommand((event) => {
-            if (!this.isEnabled)
-                return;
-            if (event.command.startsWith('codeflow.'))
-                return;
-            this.trackActivity({
-                type: types_1.ActivityType.COMMAND,
-                data: { command: event.command }
-            });
-        }));
+        // Note: VS Code doesn't provide onDidExecuteCommand event
+        // Command tracking would need to be implemented differently
     }
     registerCommands() {
         this.disposables.push(vscode.commands.registerCommand('codeflow.toggleTracking', () => {
