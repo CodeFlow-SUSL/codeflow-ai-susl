@@ -31,7 +31,8 @@ export class VisualizationPanel {
                     enableScripts: true,
                     localResourceRoots: [
                         vscode.Uri.joinPath(this.context.extensionUri, 'media'),
-                        vscode.Uri.joinPath(this.context.extensionUri, 'node_modules')
+                        vscode.Uri.joinPath(this.context.extensionUri, 'node_modules'),
+                        vscode.Uri.joinPath(this.context.extensionUri, 'icon')
                     ]
                 }
             );
@@ -61,6 +62,10 @@ export class VisualizationPanel {
 
         const styleUri = webview.asWebviewUri(
             vscode.Uri.joinPath(this.context.extensionUri, 'media', 'styles.css')
+        );
+
+        const logoUri = webview.asWebviewUri(
+            vscode.Uri.joinPath(this.context.extensionUri, 'icon', '2.png')
         );
 
         const nonce = getNonce();
@@ -95,7 +100,7 @@ export class VisualizationPanel {
     <html lang="en">
     <head>
     <meta charset="UTF-8">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}' 'unsafe-inline';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}' 'unsafe-inline'; img-src ${webview.cspSource} data:;">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CodeFlow Report</title>
     <link href="${styleUri}" rel="stylesheet">
@@ -108,32 +113,35 @@ export class VisualizationPanel {
     </button>
     <div class="container">
         <header class="dashboard-header">
-        <div class="header-copy">
-            <span class="eyebrow" id="datetime">📅 ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}</span>
-            <h1>CodeFlow AI</h1>
-            <p>Your recent coding rhythm, intelligently summarized.</p>
-            <div class="header-meta">
-            <span class="meta-pill">Top language: ${topLanguage}</span>
-            <span class="meta-pill">Active window: ${activeRangeLabel}</span>
-            </div>
-        </div>
-        <div class="header-actions">
-            <div style="display: flex; flex-direction: column; gap: 12px;">
-            <button class="btn export-btn" onclick="exportReport()">
+        <div class="header-content">
+            <button class="btn export-btn" onclick="exportReport()" style="position: absolute; top: 30px; left: 50%; transform: translateX(-50%); z-index: 10;">
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M14 11V14H2V11H0V14C0 15.1 0.9 16 2 16H14C15.1 16 16 15.1 16 14V11H14ZM13 7L11.59 5.59L9 8.17V0H7V8.17L4.41 5.59L3 7L8 12L13 7Z" fill="currentColor"/>
                 </svg>
                 Export Report
             </button>
+            <div class="header-copy">
+                <span class="eyebrow" id="datetime">📅 ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}</span>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <img src="${logoUri}" alt="CodeFlow AI Logo" style="width: 40px; height: 40px; object-fit: contain; border: 1px solid #7999ddff; padding: 6px; border-radius: 8px; background: #f8fafc;">
+                    <h1>CodeFlow AI</h1>
+                </div>
+                <p style="font-size: 16px; color: #64748b; margin: 12px 0; line-height: 1.6; font-weight: 400;">Your recent <span style="font-weight: 700; color: #0066cc;">Coding Rhythm</span>, intelligently summarized.</p>
+                <div class="header-meta">
+                <span class="meta-pill">Top language: ${topLanguage}</span>
+                <span class="meta-pill">Active window: ${activeRangeLabel}</span>
+                </div>
             </div>
-            <div class="score-card">
-            <div class="score-ring">
-                <span class="score-value">${insight.productivityScore}</span>
-            </div>
-            <div class="score-details">
-                <span class="score-label">Productivity score</span>
-                <span class="score-sub">${totalCodingHours}h logged</span>
-            </div>
+            <div class="header-actions">
+                <div class="score-card">
+                <div class="score-ring">
+                    <span class="score-value">${insight.productivityScore}</span>
+                </div>
+                <div class="score-details">
+                    <span class="score-label">Productivity score</span>
+                    <span class="score-sub">${totalCodingHours}h logged</span>
+                </div>
+                </div>
             </div>
         </div>
         </header>
