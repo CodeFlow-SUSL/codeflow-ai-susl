@@ -24,12 +24,15 @@ body {
 }
 
 body.dark-mode {
-    --bg-primary: #1e1e1e;
-    --bg-secondary: #2d2d30;
-    --text-primary: #e0e0e0;
-    --text-secondary: #b0b0b0;
-    --border-color: #3e3e42;
-    --shadow: rgba(0, 0, 0, 0.3);
+    --bg-primary: #0d1117;
+    --bg-secondary: #161b22;
+    --text-primary: #e6edf3;
+    --text-secondary: #8b949e;
+    --accent-primary: #58a6ff;
+    --accent-secondary: #79c0ff;
+    --border-color: #30363d;
+    --shadow: rgba(0, 0, 0, 0.5);
+    background: #0d1117;
 }
 
 .container {
@@ -691,16 +694,45 @@ h1 {
     height: 50px;
     border-radius: 50%;
     background: var(--bg-secondary);
-    border: none;
+    border: 1px solid var(--border-color);
     cursor: pointer;
-    font-size: 24px;
     box-shadow: 0 4px 16px var(--shadow);
     transition: all 0.3s ease;
     z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent-primary);
 }
 
 .theme-toggle:hover {
     transform: scale(1.1) rotate(15deg);
+    box-shadow: 0 6px 20px var(--shadow);
+}
+
+.theme-toggle svg {
+    width: 24px;
+    height: 24px;
+    transition: transform 0.3s ease;
+}
+
+.theme-toggle .sun-icon {
+    opacity: 1;
+    transition: opacity 0.3s ease;
+}
+
+.theme-toggle .moon-icon {
+    opacity: 0;
+    position: absolute;
+    transition: opacity 0.3s ease;
+}
+
+body.dark-mode .theme-toggle .sun-icon {
+    opacity: 0;
+}
+
+body.dark-mode .theme-toggle .moon-icon {
+    opacity: 1;
 }
 
 .export-btn {
@@ -719,5 +751,115 @@ h1 {
 .export-btn:hover {
     transform: translateY(-2px);
     box-shadow: 0 6px 16px rgba(40, 167, 69, 0.4);
+}
+
+/* Dark Mode Enhancements */
+body.dark-mode .dashboard-header {
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--border-color);
+}
+
+body.dark-mode .metric-card {
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(88, 166, 255, 0.2);
+}
+
+body.dark-mode .metric-card:hover {
+    box-shadow: 0 10px 30px rgba(88, 166, 255, 0.2);
+}
+
+body.dark-mode .insight-card {
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--border-color);
+}
+
+body.dark-mode .insight-card:hover {
+    box-shadow: 0 12px 40px rgba(88, 166, 255, 0.2);
+}
+
+body.dark-mode .score-card {
+    background: linear-gradient(135deg, rgba(88, 166, 255, 0.1), rgba(121, 192, 255, 0.1));
+    box-shadow: 0 10px 24px rgba(88, 166, 255, 0.15);
+}
+
+body.dark-mode .score-ring {
+    background: linear-gradient(135deg, #1f6feb, #58a6ff);
+    box-shadow: 0 10px 28px rgba(88, 166, 255, 0.4);
+}
+
+body.dark-mode .meta-pill {
+    background: rgba(88, 166, 255, 0.15);
+}
+
+body.dark-mode .chip {
+    background: rgba(88, 166, 255, 0.2);
+}
+
+body.dark-mode .metric-icon {
+    background: rgba(88, 166, 255, 0.15);
+}
+
+body.dark-mode .badge.earned {
+    background: linear-gradient(135deg, rgba(88, 166, 255, 0.15), rgba(121, 192, 255, 0.15));
+    border-color: var(--accent-primary);
+}
+
+body.dark-mode .badge.earned:hover {
+    box-shadow: 0 8px 24px rgba(88, 166, 255, 0.4);
+}
+
+body.dark-mode .premium-feature {
+    border: 1px solid var(--border-color);
+    background: var(--bg-primary);
+}
+
+body.dark-mode .premium-feature:hover {
+    box-shadow: 0 12px 26px rgba(88, 166, 255, 0.25);
+}
+
+body.dark-mode .tf-highlights {
+    background: rgba(88, 166, 255, 0.1);
+}
+
+body.dark-mode .tf-feature {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+}
+
+body.dark-mode .btn {
+    box-shadow: 0 2px 8px rgba(88, 166, 255, 0.2);
+}
+
+body.dark-mode .btn:hover {
+    box-shadow: 0 4px 12px rgba(88, 166, 255, 0.3);
+}
+
+body.dark-mode .theme-toggle {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+    border: 1px solid var(--border-color);
+}
+
+body.dark-mode .upgrade-btn {
+    background: linear-gradient(135deg, #1f6feb, #58a6ff);
+}
+
+body.dark-mode .progress-fill {
+    background: linear-gradient(90deg, #1f6feb, #58a6ff);
+}
+
+body.dark-mode .insight-card::before {
+    background: linear-gradient(90deg, #1f6feb, #58a6ff);
+}
+
+body.dark-mode .stat-card {
+    border-left-color: var(--accent-primary);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-mode h1 {
+    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 

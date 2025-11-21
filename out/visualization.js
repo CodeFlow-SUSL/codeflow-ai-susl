@@ -108,12 +108,29 @@ class VisualizationPanel {
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}' 'unsafe-inline';">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CodeFlow Report</title>
 <link href="${styleUri}" rel="stylesheet">
+<script nonce="${nonce}">
+// Initialize theme immediately before body renders
+(function() {
+    try {
+        var theme = localStorage.getItem('codeflow-theme');
+        if (theme === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+        }
+    } catch(e) {}
+})();
+</script>
 </head>
-<body>
+<body onload="applyStoredTheme()">
+<button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path class="sun-icon" d="M12 3V4M12 20V21M4 12H3M6.31412 6.31412L5.5 5.5M17.6859 6.31412L18.5 5.5M6.31412 17.69L5.5 18.5M17.6859 17.69L18.5 18.5M21 12H20M16 12C16 14.2091 14.2091 16 12 16C9.79086 16 8 14.2091 8 12C8 9.79086 9.79086 8 12 8C14.2091 8 16 9.79086 16 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path class="moon-icon" d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="currentColor"/>
+    </svg>
+</button>
 <div class="container">
     <header class="dashboard-header">
         <div class="header-copy">
@@ -268,7 +285,7 @@ const commandData = ${JSON.stringify(insight.mostUsedCommands)};
 const fileData = ${JSON.stringify(insight.mostWorkedFiles)};
 
 // Chart color schemes
-const gradientColors = ['#0066cc', '#3399ff', '#0099ff', '#00ccff', '#0052cc', '#66b3ff', '#3385ff'];
+const gradientColors = ['#667eea', '#764ba2', '#f093fb', '#4facfe', '#43e97b', '#fa709a', '#fee140'];
 const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
@@ -293,8 +310,8 @@ const chartOptions = {
 // Daily Coding Hours (Line)
 const dailyCtx = document.getElementById('dailyChart').getContext('2d');
 const dailyGradient = dailyCtx.createLinearGradient(0, 0, 0, 400);
-dailyGradient.addColorStop(0, 'rgba(0, 102, 204, 0.6)');
-dailyGradient.addColorStop(1, 'rgba(51, 153, 255, 0.1)');
+dailyGradient.addColorStop(0, 'rgba(102, 126, 234, 0.6)');
+dailyGradient.addColorStop(1, 'rgba(118, 75, 162, 0.1)');
 
 const dailyLabels = dailyCoding.map(item => formatDayLabel(item.date));
 const dailyHours = dailyCoding.map(item => Number((item.minutes / 60).toFixed(2)));
@@ -307,13 +324,13 @@ new Chart(dailyCtx, {
             label: 'Hours coded',
             data: dailyHours,
             backgroundColor: dailyGradient,
-            borderColor: '#0066cc',
+            borderColor: '#667eea',
             borderWidth: 3,
             fill: true,
             tension: 0.35,
             pointRadius: 5,
             pointHoverRadius: 7,
-            pointBackgroundColor: '#0066cc',
+            pointBackgroundColor: '#667eea',
             pointBorderColor: '#fff',
             pointBorderWidth: 2
         }]
@@ -362,8 +379,8 @@ new Chart(languageCtx, {
 // Commands Chart (Bar with gradient)
 const commandCtx = document.getElementById('commandChart').getContext('2d');
 const commandGradient = commandCtx.createLinearGradient(0, 0, 0, 400);
-commandGradient.addColorStop(0, 'rgba(0, 102, 204, 0.8)');
-commandGradient.addColorStop(1, 'rgba(51, 153, 255, 0.8)');
+commandGradient.addColorStop(0, 'rgba(102, 126, 234, 0.8)');
+commandGradient.addColorStop(1, 'rgba(118, 75, 162, 0.8)');
 new Chart(commandCtx, {
     type: 'bar',
     data: {
@@ -395,8 +412,8 @@ new Chart(commandCtx, {
 // Files Chart (Horizontal Bar)
 const fileCtx = document.getElementById('fileChart').getContext('2d');
 const fileGradient = fileCtx.createLinearGradient(0, 0, 400, 0);
-fileGradient.addColorStop(0, 'rgba(0, 153, 255, 0.8)');
-fileGradient.addColorStop(1, 'rgba(51, 204, 255, 0.8)');
+fileGradient.addColorStop(0, 'rgba(67, 233, 123, 0.8)');
+fileGradient.addColorStop(1, 'rgba(56, 239, 125, 0.8)');
 
 new Chart(fileCtx, {
     type: 'bar',
@@ -427,9 +444,24 @@ new Chart(fileCtx, {
     }
 });
 
+function applyStoredTheme() {
+    try {
+        var theme = localStorage.getItem('codeflow-theme');
+        if (theme === 'dark' || document.documentElement.getAttribute('data-theme') === 'dark') {
+            document.body.classList.add('dark-mode');
+        }
+    } catch(e) {}
+}
+
 function toggleTheme() {
     document.body.classList.toggle('dark-mode');
-    localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+    const isDark = document.body.classList.contains('dark-mode');
+    try {
+        localStorage.setItem('codeflow-theme', isDark ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+    } catch (e) {
+        console.warn('Failed to save theme preference:', e);
+    }
 }
 
 function exportReport() {
@@ -455,14 +487,6 @@ function exportReport() {
 function refreshDashboard() {
     vscodeApi.postMessage({ type: 'refresh' });
 }
-
-// Load theme preference
-window.addEventListener('DOMContentLoaded', () => {
-    const theme = localStorage.getItem('theme');
-    if (theme === 'dark') {
-        document.body.classList.add('dark-mode');
-    }
-});
 
 function formatDayLabel(dateStr) {
     const date = new Date(dateStr + 'T00:00:00');
