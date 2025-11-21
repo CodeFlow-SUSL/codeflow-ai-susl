@@ -134,10 +134,10 @@ class VisualizationPanel {
                 <img src="${logoUri}" alt="" style="width: 280px; height: 280px; object-fit: contain;">
             </div>
             <div class="header-copy" style="position: relative; z-index: 1;">
-                <span class="eyebrow" id="datetime">📅 ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}</span>
+                <span class="eyebrow" id="datetime">🩷 ${new Date().toLocaleDateString()} | ${new Date().toLocaleTimeString()}</span>
                 <div style="display: flex; align-items: center; gap: 12px;">
                     <img src="${logoUri}" alt="CodeFlow AI Logo" style="width: 40px; height: 40px; object-fit: contain; border: 1px solid #7999ddff; padding: 6px; border-radius: 8px; background: #f8fafc;">
-                    <h1>CodeFlow AI</h1>
+                    <h1 style="animation: colorPulse 3s ease-in-out infinite;">CodeFlow AI</h1>
                 </div>
                 <p style="font-size: 16px; color: #64748b; margin: 12px 0; line-height: 1.6; font-weight: 400;">Your recent <span style="font-weight: 700; color: #0066cc;">Coding Rhythm</span>, intelligently summarized.</p>
                 <div class="header-meta">
@@ -305,7 +305,7 @@ class VisualizationPanel {
         const dateTimeElement = document.getElementById('datetime');
         if (dateTimeElement) {
             const now = new Date();
-            dateTimeElement.textContent = '📅 ' + now.toLocaleDateString() + ' ' + now.toLocaleTimeString();
+            dateTimeElement.textContent = ' 🩷 ' + now.toLocaleDateString() + ' | ' + now.toLocaleTimeString();
         }
     }
     setInterval(updateDateTime, 1000);

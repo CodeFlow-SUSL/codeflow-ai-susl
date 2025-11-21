@@ -35,6 +35,11 @@ body {
     to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes colorPulse {
+    0%, 100% { color: #0066cc; }
+    50% { color: #ffffff; }
+}
+
 .dashboard-header {
     display: flex;
     flex-direction: column;
