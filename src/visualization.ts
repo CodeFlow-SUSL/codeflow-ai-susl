@@ -92,196 +92,200 @@ export class VisualizationPanel {
         const premiumFeaturesHtml = this.buildPremiumFeaturesHtml();
 
         return `<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}' 'unsafe-inline';">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CodeFlow Report</title>
-<link href="${styleUri}" rel="stylesheet">
-<script nonce="${nonce}">
-// Initialize theme immediately before body renders
-(function() {
-    try {
-        var theme = localStorage.getItem('codeflow-theme');
-        if (theme === 'dark') {
-            document.documentElement.setAttribute('data-theme', 'dark');
-        }
-    } catch(e) {}
-})();
-</script>
-</head>
-<body onload="applyStoredTheme()">
-<button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path class="sun-icon" d="M12 3V4M12 20V21M4 12H3M6.31412 6.31412L5.5 5.5M17.6859 6.31412L18.5 5.5M6.31412 17.69L5.5 18.5M17.6859 17.69L18.5 18.5M21 12H20M16 12C16 14.2091 14.2091 16 12 16C9.79086 16 8 14.2091 8 12C8 9.79086 9.79086 8 12 8C14.2091 8 16 9.79086 16 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        <path class="moon-icon" d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="currentColor"/>
-    </svg>
-</button>
-<div class="container">
-    <header class="dashboard-header">
+    <html lang="en">
+    <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}' 'unsafe-inline';">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeFlow Report</title>
+    <link href="${styleUri}" rel="stylesheet">
+    </head>
+    <body>
+    <button class="theme-toggle" onclick="refreshDashboard()" aria-label="Refresh dashboard">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M13.65 2.35C12.2 0.9 10.21 0 8 0C3.58 0 0.01 3.58 0.01 8C0.01 12.42 3.58 16 8 16C11.73 16 14.84 13.45 15.73 10H13.65C12.83 12.33 10.61 14 8 14C4.69 14 2 11.31 2 8C2 4.69 4.69 2 8 2C9.66 2 11.14 2.69 12.22 3.78L9 7H16V0L13.65 2.35Z" fill="currentColor"/>
+                </svg>
+    </button>
+    <div class="container">
+        <header class="dashboard-header">
         <div class="header-copy">
-            <span class="eyebrow">CodeFlow AI</span>
-            <h1>Productivity Dashboard</h1>
+            <span class="eyebrow" id="datetime">📅 ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}</span>
+            <h1>CodeFlow AI</h1>
             <p>Your recent coding rhythm, intelligently summarized.</p>
             <div class="header-meta">
-                <span class="meta-pill">Top language: ${topLanguage}</span>
-                <span class="meta-pill">Active window: ${activeRangeLabel}</span>
+            <span class="meta-pill">Top language: ${topLanguage}</span>
+            <span class="meta-pill">Active window: ${activeRangeLabel}</span>
             </div>
         </div>
         <div class="header-actions">
-            <button class="btn refresh-btn" onclick="refreshDashboard()">🔄 Refresh</button>
-            <button class="btn export-btn" onclick="exportReport()">📥 Export JSON</button>
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+            <button class="btn export-btn" onclick="exportReport()">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M14 11V14H2V11H0V14C0 15.1 0.9 16 2 16H14C15.1 16 16 15.1 16 14V11H14ZM13 7L11.59 5.59L9 8.17V0H7V8.17L4.41 5.59L3 7L8 12L13 7Z" fill="currentColor"/>
+                </svg>
+                Export Report
+            </button>
+            </div>
             <div class="score-card">
-                <div class="score-ring">
-                    <span class="score-value">${insight.productivityScore}</span>
-                </div>
-                <div class="score-details">
-                    <span class="score-label">Productivity score</span>
-                    <span class="score-sub">${totalCodingHours}h logged</span>
-                </div>
+            <div class="score-ring">
+                <span class="score-value">${insight.productivityScore}</span>
+            </div>
+            <div class="score-details">
+                <span class="score-label">Productivity score</span>
+                <span class="score-sub">${totalCodingHours}h logged</span>
+            </div>
             </div>
         </div>
-    </header>
+        </header>
 
-    <section class="metric-grid">
+        <section class="metric-grid">
         <article class="metric-card">
             <span class="metric-icon">⏱️</span>
             <div>
-                <h3>${totalCodingHours}h</h3>
-                <p>Total coding time</p>
+            <h3>${totalCodingHours}h</h3>
+            <p>Total coding time</p>
             </div>
         </article>
         <article class="metric-card">
             <span class="metric-icon">📊</span>
             <div>
-                <h3>${averageDailyHours}h</h3>
-                <p>Average per day</p>
+            <h3>${averageDailyHours}h</h3>
+            <p>Average per day</p>
             </div>
         </article>
         <article class="metric-card">
             <span class="metric-icon">⌨️</span>
             <div>
-                <h3>${totalCommandsFormatted}</h3>
-                <p>Commands executed</p>
+            <h3>${totalCommandsFormatted}</h3>
+            <p>Commands executed</p>
             </div>
         </article>
         <article class="metric-card">
             <span class="metric-icon">🔥</span>
             <div>
-                <h3>${streakLabel}</h3>
-                <p>Current streak</p>
+            <h3>${streakLabel}</h3>
+            <p>Current streak</p>
             </div>
         </article>
         <article class="metric-card">
             <span class="metric-icon">👆</span>
             <div>
-                <h3>${totalKeystrokesFormatted}</h3>
-                <p>Keystrokes tracked</p>
+            <h3>${totalKeystrokesFormatted}</h3>
+            <p>Keystrokes tracked</p>
             </div>
         </article>
         <article class="metric-card">
             <span class="metric-icon">📁</span>
             <div>
-                <h3>${uniqueFilesFormatted}</h3>
-                <p>Files touched</p>
+            <h3>${uniqueFilesFormatted}</h3>
+            <p>Files touched</p>
             </div>
         </article>
-    </section>
+        </section>
 
-    <section class="chart-grid">
+        <section class="chart-grid">
         <article class="insight-card chart-card">
             <div class="card-head">
-                <h2>📆 Daily Coding Hours</h2>
-                <span class="chip">Avg ${averageDailyHours}h/day</span>
+            <h2>📆 Daily Coding Hours</h2>
+            <span class="chip">Avg ${averageDailyHours}h/day</span>
             </div>
             <div class="chart-container large">
-                <canvas id="dailyChart"></canvas>
+            <canvas id="dailyChart"></canvas>
             </div>
         </article>
 
         <article class="insight-card chart-card">
             <div class="card-head">
-                <h2>🌐 Language Distribution</h2>
-                <span class="chip">${languagesChip}</span>
+            <h2>🌐 Language Distribution</h2>
+            <span class="chip">${languagesChip}</span>
             </div>
             <div class="chart-container">
-                <canvas id="languageChart"></canvas>
+            <canvas id="languageChart"></canvas>
             </div>
         </article>
 
         <article class="insight-card chart-card">
             <div class="card-head">
-                <h2>⌨️ Most Used Commands</h2>
-                <span class="chip">${insight.mostUsedCommands.length} favourites</span>
+            <h2>⌨️ Most Used Commands</h2>
+            <span class="chip">${insight.mostUsedCommands.length} favourites</span>
             </div>
             <div class="chart-container">
-                <canvas id="commandChart"></canvas>
+            <canvas id="commandChart"></canvas>
             </div>
         </article>
 
         <article class="insight-card chart-card">
             <div class="card-head">
-                <h2>📁 Most Worked Files</h2>
-                <span class="chip">${insight.uniqueFilesWorked} files</span>
+            <h2>📁 Most Worked Files</h2>
+            <span class="chip">${insight.uniqueFilesWorked} files</span>
             </div>
             <div class="chart-container">
-                <canvas id="fileChart"></canvas>
+            <canvas id="fileChart"></canvas>
             </div>
         </article>
-    </section>
+        </section>
 
-    <section class="deep-dive">
+        <section class="deep-dive">
         <article class="insight-card ai-card">
             <div class="card-head">
-                <h2>🤖 AI-Powered Insights</h2>
-                <span class="chip">Smart suggestions</span>
+            <h2>🤖 AI-Powered Insights</h2>
+            <span class="chip">Smart suggestions</span>
             </div>
             ${aiInsightsHtml}
         </article>
 
         <article class="insight-card badge-card">
             <div class="card-head">
-                <h2>🏆 Achievement Badges</h2>
-                <span class="chip">Track your highlights</span>
+            <h2>🏆 Achievement Badges</h2>
+            <span class="chip">Track your highlights</span>
             </div>
             <div class="badges">
-                ${achievementsHtml}
+            ${achievementsHtml}
             </div>
         </article>
 
         <article class="insight-card premium-card">
             <div class="card-head">
-                <h2>💎 Premium Features</h2>
-                <span class="chip">Unlock more flow</span>
+            <h2>💎 Premium Features</h2>
+            <span class="chip">Unlock more flow</span>
             </div>
             <div class="premium-grid">
-                ${premiumFeaturesHtml}
+            ${premiumFeaturesHtml}
             </div>
             <button class="btn upgrade-btn" onclick="requestUpgrade()">Upgrade to CodeFlow Pro</button>
         </article>
-    </section>
-</div>
+        </section>
+    </div>
 
-<script nonce="${nonce}" src="${chartJsScriptUri}"></script>
-<script nonce="${nonce}">
-const vscodeApi = typeof acquireVsCodeApi === 'function' ? acquireVsCodeApi() : { postMessage: () => {} };
-const dailyCoding = ${JSON.stringify(insight.dailyCodingMinutes)};
-const languageData = ${JSON.stringify(insight.languageDistribution)};
-const commandData = ${JSON.stringify(insight.mostUsedCommands)};
-const fileData = ${JSON.stringify(insight.mostWorkedFiles)};
+    <script nonce="${nonce}" src="${chartJsScriptUri}"></script>
+    <script nonce="${nonce}">
+    const vscodeApi = typeof acquireVsCodeApi === 'function' ? acquireVsCodeApi() : { postMessage: () => {} };
+    const dailyCoding = ${JSON.stringify(insight.dailyCodingMinutes)};
+    const languageData = ${JSON.stringify(insight.languageDistribution)};
+    const commandData = ${JSON.stringify(insight.mostUsedCommands)};
+    const fileData = ${JSON.stringify(insight.mostWorkedFiles)};
 
-// Chart color schemes
-const gradientColors = ['#667eea', '#764ba2', '#f093fb', '#4facfe', '#43e97b', '#fa709a', '#fee140'];
-const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
+    // Update time continuously
+    function updateDateTime() {
+        const dateTimeElement = document.getElementById('datetime');
+        if (dateTimeElement) {
+            const now = new Date();
+            dateTimeElement.textContent = '📅 ' + now.toLocaleDateString() + ' ' + now.toLocaleTimeString();
+        }
+    }
+    setInterval(updateDateTime, 1000);
+
+    // Chart color schemes
+    const gradientColors = ['#667eea', '#764ba2', '#f093fb', '#4facfe', '#43e97b', '#fa709a', '#fee140'];
+    const chartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
         legend: { 
             position: 'bottom',
             labels: {
-                padding: 15,
-                font: { size: 12 }
+            padding: 15,
+            font: { size: 12 }
             }
         },
         tooltip: {
@@ -291,21 +295,21 @@ const chartOptions = {
             titleFont: { size: 14, weight: 'bold' },
             bodyFont: { size: 13 }
         }
-    }
-};
+        }
+    };
 
-// Daily Coding Hours (Line)
-const dailyCtx = document.getElementById('dailyChart').getContext('2d');
-const dailyGradient = dailyCtx.createLinearGradient(0, 0, 0, 400);
-dailyGradient.addColorStop(0, 'rgba(102, 126, 234, 0.6)');
-dailyGradient.addColorStop(1, 'rgba(118, 75, 162, 0.1)');
+    // Daily Coding Hours (Line)
+    const dailyCtx = document.getElementById('dailyChart').getContext('2d');
+    const dailyGradient = dailyCtx.createLinearGradient(0, 0, 0, 400);
+    dailyGradient.addColorStop(0, 'rgba(102, 126, 234, 0.6)');
+    dailyGradient.addColorStop(1, 'rgba(118, 75, 162, 0.1)');
 
-const dailyLabels = dailyCoding.map(item => formatDayLabel(item.date));
-const dailyHours = dailyCoding.map(item => Number((item.minutes / 60).toFixed(2)));
+    const dailyLabels = dailyCoding.map(item => formatDayLabel(item.date));
+    const dailyHours = dailyCoding.map(item => Number((item.minutes / 60).toFixed(2)));
 
-new Chart(dailyCtx, {
-    type: 'line',
-    data: {
+    new Chart(dailyCtx, {
+        type: 'line',
+        data: {
         labels: dailyLabels,
         datasets: [{
             label: 'Hours coded',
@@ -321,29 +325,29 @@ new Chart(dailyCtx, {
             pointBorderColor: '#fff',
             pointBorderWidth: 2
         }]
-    },
-    options: {
+        },
+        options: {
         ...chartOptions,
         scales: {
             y: {
-                beginAtZero: true,
-                ticks: { font: { size: 11 } },
-                title: { display: true, text: 'Hours', font: { size: 12 } },
-                grid: { color: 'rgba(0, 0, 0, 0.05)' }
+            beginAtZero: true,
+            ticks: { font: { size: 11 } },
+            title: { display: true, text: 'Hours', font: { size: 12 } },
+            grid: { color: 'rgba(0, 0, 0, 0.05)' }
             },
             x: {
-                ticks: { font: { size: 11 } },
-                grid: { display: false }
+            ticks: { font: { size: 11 } },
+            grid: { display: false }
             }
         }
-    }
-});
+        }
+    });
 
-// Language Distribution Chart (Doughnut)
-const languageCtx = document.getElementById('languageChart').getContext('2d');
-new Chart(languageCtx, {
-    type: 'doughnut',
-    data: {
+    // Language Distribution Chart (Doughnut)
+    const languageCtx = document.getElementById('languageChart').getContext('2d');
+    new Chart(languageCtx, {
+        type: 'doughnut',
+        data: {
         labels: languageData.map(item => item.language),
         datasets: [{
             data: languageData.map(item => item.percentage),
@@ -352,25 +356,25 @@ new Chart(languageCtx, {
             borderColor: '#fff',
             hoverOffset: 10
         }]
-    },
-    options: {
+        },
+        options: {
         ...chartOptions,
         cutout: '60%',
         plugins: {
             ...chartOptions.plugins,
             legend: { position: 'right' }
         }
-    }
-});
+        }
+    });
 
-// Commands Chart (Bar with gradient)
-const commandCtx = document.getElementById('commandChart').getContext('2d');
-const commandGradient = commandCtx.createLinearGradient(0, 0, 0, 400);
-commandGradient.addColorStop(0, 'rgba(102, 126, 234, 0.8)');
-commandGradient.addColorStop(1, 'rgba(118, 75, 162, 0.8)');
-new Chart(commandCtx, {
-    type: 'bar',
-    data: {
+    // Commands Chart (Bar with gradient)
+    const commandCtx = document.getElementById('commandChart').getContext('2d');
+    const commandGradient = commandCtx.createLinearGradient(0, 0, 0, 400);
+    commandGradient.addColorStop(0, 'rgba(102, 126, 234, 0.8)');
+    commandGradient.addColorStop(1, 'rgba(118, 75, 162, 0.8)');
+    new Chart(commandCtx, {
+        type: 'bar',
+        data: {
         labels: commandData.map(item => item.command),
         datasets: [{
             label: 'Usage Count',
@@ -379,32 +383,32 @@ new Chart(commandCtx, {
             borderRadius: 8,
             borderSkipped: false
         }]
-    },
-    options: {
+        },
+        options: {
         ...chartOptions,
         scales: {
             y: {
-                beginAtZero: true,
-                ticks: { font: { size: 11 } },
-                grid: { color: 'rgba(0, 0, 0, 0.05)' }
+            beginAtZero: true,
+            ticks: { font: { size: 11 } },
+            grid: { color: 'rgba(0, 0, 0, 0.05)' }
             },
             x: {
-                ticks: { font: { size: 11 } },
-                grid: { display: false }
+            ticks: { font: { size: 11 } },
+            grid: { display: false }
             }
         }
-    }
-});
+        }
+    });
 
-// Files Chart (Horizontal Bar)
-const fileCtx = document.getElementById('fileChart').getContext('2d');
-const fileGradient = fileCtx.createLinearGradient(0, 0, 400, 0);
-fileGradient.addColorStop(0, 'rgba(67, 233, 123, 0.8)');
-fileGradient.addColorStop(1, 'rgba(56, 239, 125, 0.8)');
+    // Files Chart (Horizontal Bar)
+    const fileCtx = document.getElementById('fileChart').getContext('2d');
+    const fileGradient = fileCtx.createLinearGradient(0, 0, 400, 0);
+    fileGradient.addColorStop(0, 'rgba(67, 233, 123, 0.8)');
+    fileGradient.addColorStop(1, 'rgba(56, 239, 125, 0.8)');
 
-new Chart(fileCtx, {
-    type: 'bar',
-    data: {
+    new Chart(fileCtx, {
+        type: 'bar',
+        data: {
         labels: fileData.map(item => item.file.split('/').pop() || item.file),
         datasets: [{
             label: 'Time Spent (minutes)',
@@ -413,83 +417,63 @@ new Chart(fileCtx, {
             borderRadius: 8,
             borderSkipped: false
         }]
-    },
-    options: {
+        },
+        options: {
         ...chartOptions,
         indexAxis: 'y',
         scales: {
             x: {
-                beginAtZero: true,
-                ticks: { font: { size: 11 } },
-                grid: { color: 'rgba(0, 0, 0, 0.05)' }
+            beginAtZero: true,
+            ticks: { font: { size: 11 } },
+            grid: { color: 'rgba(0, 0, 0, 0.05)' }
             },
             y: {
-                ticks: { font: { size: 10 } },
-                grid: { display: false }
+            ticks: { font: { size: 10 } },
+            grid: { display: false }
             }
         }
-    }
-});
-
-function applyStoredTheme() {
-    try {
-        var theme = localStorage.getItem('codeflow-theme');
-        if (theme === 'dark' || document.documentElement.getAttribute('data-theme') === 'dark') {
-            document.body.classList.add('dark-mode');
         }
-    } catch(e) {}
-}
+    });
 
-function toggleTheme() {
-    document.body.classList.toggle('dark-mode');
-    const isDark = document.body.classList.contains('dark-mode');
-    try {
-        localStorage.setItem('codeflow-theme', isDark ? 'dark' : 'light');
-        document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
-    } catch (e) {
-        console.warn('Failed to save theme preference:', e);
-    }
-}
-
-function exportReport() {
-    const reportData = {
+    function exportReport() {
+        const reportData = {
         productivityScore: ${insight.productivityScore},
         languages: languageData,
         commands: commandData,
         files: fileData,
         dailyCoding: dailyCoding,
         generatedAt: new Date().toISOString()
-    };
-    
-    const dataStr = JSON.stringify(reportData, null, 2);
-    const dataBlob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(dataBlob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'codeflow-report-' + new Date().toISOString().split('T')[0] + '.json';
-    link.click();
-    URL.revokeObjectURL(url);
-}
-
-function refreshDashboard() {
-    vscodeApi.postMessage({ type: 'refresh' });
-}
-
-function formatDayLabel(dateStr) {
-    const date = new Date(dateStr + 'T00:00:00');
-    if (Number.isNaN(date.getTime())) {
-        return dateStr;
+        };
+        
+        const dataStr = JSON.stringify(reportData, null, 2);
+        const dataBlob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(dataBlob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'codeflow-report-' + new Date().toISOString().split('T')[0] + '.json';
+        link.click();
+        URL.revokeObjectURL(url);
     }
-    return date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
-}
 
-function requestUpgrade() {
-    vscodeApi.postMessage({ type: 'upgrade' });
-}
+    function refreshDashboard() {
+        vscodeApi.postMessage({ type: 'refresh' });
+    }
 
-</script>
-</body>
-</html>`;
+    function formatDayLabel(dateStr) {
+        const date = new Date(dateStr + 'T00:00:00');
+        if (Number.isNaN(date.getTime())) {
+        return dateStr;
+        }
+        return date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+    }
+
+    function requestUpgrade() {
+        vscodeApi.postMessage({ type: 'upgrade' });
+    }
+
+    </script>
+    </body>
+    </html>`;
     }
 
     private formatActiveHourRange(range: { earliest: number | null; latest: number | null }): string {
