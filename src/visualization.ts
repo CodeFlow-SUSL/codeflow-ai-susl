@@ -56,7 +56,7 @@ export class VisualizationPanel {
 
     private _getHtmlForWebview(webview: vscode.Webview, insight: ProductivityInsight): string {
         const chartJsScriptUri = webview.asWebviewUri(
-            vscode.Uri.joinPath(this.context.extensionUri, 'node_modules', 'chart.js', 'dist', 'chart.min.js')
+            vscode.Uri.joinPath(this.context.extensionUri, 'node_modules', 'chart.js', 'dist', 'chart.umd.js')
         );
 
         const styleUri = webview.asWebviewUri(

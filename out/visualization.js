@@ -77,7 +77,7 @@ class VisualizationPanel {
         }
     }
     _getHtmlForWebview(webview, insight) {
-        const chartJsScriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, 'node_modules', 'chart.js', 'dist', 'chart.min.js'));
+        const chartJsScriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, 'node_modules', 'chart.js', 'dist', 'chart.umd.js'));
         const styleUri = webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, 'media', 'styles.css'));
         const nonce = getNonce();
         const formatHours = (value) => {
