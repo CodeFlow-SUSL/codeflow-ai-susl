@@ -133,13 +133,27 @@ export class VisualizationPanel {
                 </div>
             </div>
             <div class="header-actions">
-                <div class="score-card">
+                <div class="score-card" style="min-width: 320px; padding: 24px;">
                 <div class="score-ring">
                     <span class="score-value">${insight.productivityScore}</span>
                 </div>
                 <div class="score-details">
-                    <span class="score-label">Productivity score</span>
+                    <span class="score-label">Productivity Score</span>
                     <span class="score-sub">${totalCodingHours}h logged</span>
+                    <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(0,0,0,0.1);">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <span style="font-size: 12px; color: #64748b;">Streak</span>
+                            <span style="font-size: 12px; font-weight: 600; color: #0066cc;">${streakLabel}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <span style="font-size: 12px; color: #64748b;">Languages</span>
+                            <span style="font-size: 12px; font-weight: 600; color: #0066cc;">${insight.uniqueLanguages}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="font-size: 12px; color: #64748b;">Avg/Day</span>
+                            <span style="font-size: 12px; font-weight: 600; color: #0066cc;">${averageDailyHours}h</span>
+                        </div>
+                    </div>
                 </div>
                 </div>
             </div>
