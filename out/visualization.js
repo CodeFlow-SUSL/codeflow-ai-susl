@@ -40,12 +40,17 @@ class VisualizationPanel {
     _panel;
     _disposables = [];
     context;
+    _refreshCallback;
     constructor(context) {
         this.context = context;
+    }
+    setRefreshCallback(callback) {
+        this._refreshCallback = callback;
     }
     show(insight) {
         if (this._panel) {
             this._panel.reveal(vscode.ViewColumn.One);
+            this._panel.webview.html = this._getHtmlForWebview(this._panel.webview, insight);
         }
         else {
             this._panel = vscode.window.createWebviewPanel(VisualizationPanel.viewType, 'CodeFlow Report', vscode.ViewColumn.One, {
@@ -56,6 +61,18 @@ class VisualizationPanel {
                 ]
             });
             this._panel.webview.html = this._getHtmlForWebview(this._panel.webview, insight);
+            // Set up message handler
+            this._panel.webview.onDidReceiveMessage(async (message) => {
+                if (message?.type === 'upgrade') {
+                    vscode.commands.executeCommand('codeflow.upgradeToPro');
+                }
+                else if (message?.type === 'refresh') {
+                    // Call the refresh callback to reload fresh data
+                    if (this._refreshCallback) {
+                        await this._refreshCallback();
+                    }
+                }
+            }, undefined, this._disposables);
             this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
         }
     }
@@ -63,11 +80,30 @@ class VisualizationPanel {
         const chartJsScriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, 'node_modules', 'chart.js', 'dist', 'chart.min.js'));
         const styleUri = webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, 'media', 'styles.css'));
         const nonce = getNonce();
-        // Calculate additional stats
-        const totalCommands = insight.mostUsedCommands.reduce((sum, cmd) => sum + cmd.count, 0);
-        const totalFiles = insight.mostWorkedFiles.length;
-        const totalTime = insight.mostWorkedFiles.reduce((sum, file) => sum + file.time, 0);
-        const avgTimePerFile = totalFiles > 0 ? (totalTime / totalFiles).toFixed(1) : 0;
+        const formatHours = (value) => {
+            const rounded = Math.round(value * 10) / 10;
+            return Number.isInteger(rounded) ? rounded.toString() : rounded.toFixed(1);
+        };
+        const totalCodingHours = formatHours(insight.totalActiveMinutes / 60);
+        const averageDailyHours = insight.dailyCodingMinutes.length > 0
+            ? formatHours(insight.totalActiveMinutes / insight.dailyCodingMinutes.length / 60)
+            : '0';
+        const topLanguage = insight.languageDistribution[0]?.language ?? '—';
+        const streakLabel = insight.streakDays > 0
+            ? `${insight.streakDays} day${insight.streakDays === 1 ? '' : 's'}`
+            : 'No streak yet';
+        const activeRangeLabel = this.formatActiveHourRange(insight.activeHourRange);
+        const languagesChip = insight.uniqueLanguages === 0
+            ? 'No languages yet'
+            : insight.uniqueLanguages === 1
+                ? '1 language'
+                : `${insight.uniqueLanguages} languages`;
+        const totalCommandsFormatted = insight.totalCommandsExecuted.toLocaleString();
+        const totalKeystrokesFormatted = insight.totalKeystrokes.toLocaleString();
+        const uniqueFilesFormatted = insight.uniqueFilesWorked.toLocaleString();
+        const achievementsHtml = this.buildAchievementsHtml(insight);
+        const aiInsightsHtml = this.buildAiInsightsHtml(insight);
+        const premiumFeaturesHtml = this.buildPremiumFeaturesHtml();
         return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -80,137 +116,157 @@ class VisualizationPanel {
 <body>
 <button class="theme-toggle" onclick="toggleTheme()">🌓</button>
 <div class="container">
-    <header>
-        <div>
-            <h1>📊 CodeFlow Weekly Report</h1>
-            <p style="color: var(--text-secondary); margin: 5px 0 0 0;">Your productivity insights at a glance</p>
+    <header class="dashboard-header">
+        <div class="header-copy">
+            <span class="eyebrow">CodeFlow AI</span>
+            <h1>Productivity Dashboard</h1>
+            <p>Your recent coding rhythm, intelligently summarized.</p>
+            <div class="header-meta">
+                <span class="meta-pill">Top language: ${topLanguage}</span>
+                <span class="meta-pill">Active window: ${activeRangeLabel}</span>
+            </div>
         </div>
         <div class="header-actions">
-            <button class="btn export-btn" onclick="exportReport()">📥 Export</button>
-            <div class="productivity-score">
-                <div class="score-circle">
+            <button class="btn refresh-btn" onclick="refreshDashboard()">🔄 Refresh</button>
+            <button class="btn export-btn" onclick="exportReport()">📥 Export JSON</button>
+            <div class="score-card">
+                <div class="score-ring">
                     <span class="score-value">${insight.productivityScore}</span>
-                    <span class="score-label">Score</span>
+                </div>
+                <div class="score-details">
+                    <span class="score-label">Productivity score</span>
+                    <span class="score-sub">${totalCodingHours}h logged</span>
                 </div>
             </div>
         </div>
     </header>
 
-    <div class="stats-overview">
-        <div class="stat-card">
-            <div class="stat-icon">⌨️</div>
-            <div class="stat-value">${totalCommands}</div>
-            <div class="stat-label">Commands Executed</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-icon">📁</div>
-            <div class="stat-value">${totalFiles}</div>
-            <div class="stat-label">Files Worked On</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-icon">⏱️</div>
-            <div class="stat-value">${Math.round(totalTime / 60)}</div>
-            <div class="stat-label">Hours Coded</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-icon">🎯</div>
-            <div class="stat-value">${avgTimePerFile}</div>
-            <div class="stat-label">Avg Min/File</div>
-        </div>
-    </div>
+    <section class="metric-grid">
+        <article class="metric-card">
+            <span class="metric-icon">⏱️</span>
+            <div>
+                <h3>${totalCodingHours}h</h3>
+                <p>Total coding time</p>
+            </div>
+        </article>
+        <article class="metric-card">
+            <span class="metric-icon">📊</span>
+            <div>
+                <h3>${averageDailyHours}h</h3>
+                <p>Average per day</p>
+            </div>
+        </article>
+        <article class="metric-card">
+            <span class="metric-icon">⌨️</span>
+            <div>
+                <h3>${totalCommandsFormatted}</h3>
+                <p>Commands executed</p>
+            </div>
+        </article>
+        <article class="metric-card">
+            <span class="metric-icon">🔥</span>
+            <div>
+                <h3>${streakLabel}</h3>
+                <p>Current streak</p>
+            </div>
+        </article>
+        <article class="metric-card">
+            <span class="metric-icon">👆</span>
+            <div>
+                <h3>${totalKeystrokesFormatted}</h3>
+                <p>Keystrokes tracked</p>
+            </div>
+        </article>
+        <article class="metric-card">
+            <span class="metric-icon">📁</span>
+            <div>
+                <h3>${uniqueFilesFormatted}</h3>
+                <p>Files touched</p>
+            </div>
+        </article>
+    </section>
 
-    <div class="progress-section">
-        <h2>🎯 Weekly Goal Progress</h2>
-        <div class="progress-bar">
-            <div class="progress-fill" style="width: ${Math.min(insight.productivityScore, 100)}%"></div>
-        </div>
-        <div class="progress-text">${insight.productivityScore}% of target achieved</div>
-    </div>
+    <section class="chart-grid">
+        <article class="insight-card chart-card">
+            <div class="card-head">
+                <h2>📆 Daily Coding Hours</h2>
+                <span class="chip">Avg ${averageDailyHours}h/day</span>
+            </div>
+            <div class="chart-container large">
+                <canvas id="dailyChart"></canvas>
+            </div>
+        </article>
 
-    <div class="filter-controls">
-        <button class="filter-btn active" onclick="filterView('all')">All</button>
-        <button class="filter-btn" onclick="filterView('languages')">Languages</button>
-        <button class="filter-btn" onclick="filterView('commands')">Commands</button>
-        <button class="filter-btn" onclick="filterView('files')">Files</button>
-    </div>
-
-    <section class="insights">
-        <div class="insight-card" data-category="languages">
-            <h2>🌐 Language Distribution</h2>
+        <article class="insight-card chart-card">
+            <div class="card-head">
+                <h2>🌐 Language Distribution</h2>
+                <span class="chip">${languagesChip}</span>
+            </div>
             <div class="chart-container">
                 <canvas id="languageChart"></canvas>
             </div>
-        </div>
+        </article>
 
-        <div class="insight-card" data-category="commands">
-            <h2>⌨️ Most Used Commands</h2>
+        <article class="insight-card chart-card">
+            <div class="card-head">
+                <h2>⌨️ Most Used Commands</h2>
+                <span class="chip">${insight.mostUsedCommands.length} favourites</span>
+            </div>
             <div class="chart-container">
                 <canvas id="commandChart"></canvas>
             </div>
-        </div>
+        </article>
 
-        <div class="insight-card" data-category="files">
-            <h2>📁 Most Worked Files</h2>
+        <article class="insight-card chart-card">
+            <div class="card-head">
+                <h2>📁 Most Worked Files</h2>
+                <span class="chip">${insight.uniqueFilesWorked} files</span>
+            </div>
             <div class="chart-container">
                 <canvas id="fileChart"></canvas>
             </div>
-        </div>
-
-        <div class="insight-card" data-category="time">
-            <h2>🕐 Hourly Activity</h2>
-            <div class="chart-container">
-                <canvas id="timeChart"></canvas>
-            </div>
-        </div>
-
-        <div class="insight-card" data-category="trend">
-            <h2>📈 Weekly Trend</h2>
-            <div class="chart-container">
-                <canvas id="trendChart"></canvas>
-            </div>
-        </div>
-
-        <div class="insight-card">
-            <h2>💡 AI Suggestions</h2>
-            <div class="suggestions">
-                <ul>
-                    ${insight.suggestions.map(s => `<li>${s}</li>`).join('')}
-                </ul>
-            </div>
-        </div>
+        </article>
     </section>
 
-    <div class="badges-section">
-        <h2>Earned Badges</h2>
-        <div class="badges">
-            <div class="badge ${insight.productivityScore > 70 ? 'earned' : ''}">
-                <div class="badge-icon">🏆</div>
-                <div class="badge-name">Productivity Master</div>
-                <div class="badge-desc">Score above 70</div>
+    <section class="deep-dive">
+        <article class="insight-card ai-card">
+            <div class="card-head">
+                <h2>🤖 AI-Powered Insights</h2>
+                <span class="chip">Smart suggestions</span>
             </div>
-            <div class="badge ${insight.languageDistribution.length > 3 ? 'earned' : ''}">
-                <div class="badge-icon">🌐</div>
-                <div class="badge-name">Polyglot</div>
-                <div class="badge-desc">Work with 4+ languages</div>
+            ${aiInsightsHtml}
+        </article>
+
+        <article class="insight-card badge-card">
+            <div class="card-head">
+                <h2>🏆 Achievement Badges</h2>
+                <span class="chip">Track your highlights</span>
             </div>
-            <div class="badge ${insight.mostUsedCommands.length > 0 ? 'earned' : ''}">
-                <div class="badge-icon">⌨</div>
-                <div class="badge-name">Command Expert</div>
-                <div class="badge-desc">Use diverse commands</div>
+            <div class="badges">
+                ${achievementsHtml}
             </div>
-        </div>
-    </div>
+        </article>
+
+        <article class="insight-card premium-card">
+            <div class="card-head">
+                <h2>💎 Premium Features</h2>
+                <span class="chip">Unlock more flow</span>
+            </div>
+            <div class="premium-grid">
+                ${premiumFeaturesHtml}
+            </div>
+            <button class="btn upgrade-btn" onclick="requestUpgrade()">Upgrade to CodeFlow Pro</button>
+        </article>
+    </section>
 </div>
 
 <script nonce="${nonce}" src="${chartJsScriptUri}"></script>
 <script nonce="${nonce}">
+const vscodeApi = typeof acquireVsCodeApi === 'function' ? acquireVsCodeApi() : { postMessage: () => {} };
+const dailyCoding = ${JSON.stringify(insight.dailyCodingMinutes)};
 const languageData = ${JSON.stringify(insight.languageDistribution)};
 const commandData = ${JSON.stringify(insight.mostUsedCommands)};
 const fileData = ${JSON.stringify(insight.mostWorkedFiles)};
-
-// Generate sample data for new charts
-const hourlyData = generateHourlyData();
-const weeklyTrendData = generateWeeklyTrend();
 
 // Chart color schemes
 const gradientColors = ['#667eea', '#764ba2', '#f093fb', '#4facfe', '#43e97b', '#fa709a', '#fee140'];
@@ -234,6 +290,51 @@ const chartOptions = {
         }
     }
 };
+
+// Daily Coding Hours (Line)
+const dailyCtx = document.getElementById('dailyChart').getContext('2d');
+const dailyGradient = dailyCtx.createLinearGradient(0, 0, 0, 400);
+dailyGradient.addColorStop(0, 'rgba(102, 126, 234, 0.6)');
+dailyGradient.addColorStop(1, 'rgba(118, 75, 162, 0.1)');
+
+const dailyLabels = dailyCoding.map(item => formatDayLabel(item.date));
+const dailyHours = dailyCoding.map(item => Number((item.minutes / 60).toFixed(2)));
+
+new Chart(dailyCtx, {
+    type: 'line',
+    data: {
+        labels: dailyLabels,
+        datasets: [{
+            label: 'Hours coded',
+            data: dailyHours,
+            backgroundColor: dailyGradient,
+            borderColor: '#667eea',
+            borderWidth: 3,
+            fill: true,
+            tension: 0.35,
+            pointRadius: 5,
+            pointHoverRadius: 7,
+            pointBackgroundColor: '#667eea',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2
+        }]
+    },
+    options: {
+        ...chartOptions,
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: { font: { size: 11 } },
+                title: { display: true, text: 'Hours', font: { size: 12 } },
+                grid: { color: 'rgba(0, 0, 0, 0.05)' }
+            },
+            x: {
+                ticks: { font: { size: 11 } },
+                grid: { display: false }
+            }
+        }
+    }
+});
 
 // Language Distribution Chart (Doughnut)
 const languageCtx = document.getElementById('languageChart').getContext('2d');
@@ -327,130 +428,9 @@ new Chart(fileCtx, {
     }
 });
 
-// Hourly Activity Chart (Line)
-const timeCtx = document.getElementById('timeChart').getContext('2d');
-const timeGradient = timeCtx.createLinearGradient(0, 0, 0, 400);
-timeGradient.addColorStop(0, 'rgba(250, 112, 154, 0.6)');
-timeGradient.addColorStop(1, 'rgba(254, 225, 64, 0.1)');
-
-new Chart(timeCtx, {
-    type: 'line',
-    data: {
-        labels: hourlyData.labels,
-        datasets: [{
-            label: 'Activity Level',
-            data: hourlyData.values,
-            backgroundColor: timeGradient,
-            borderColor: '#fa709a',
-            borderWidth: 3,
-            fill: true,
-            tension: 0.4,
-            pointRadius: 5,
-            pointHoverRadius: 7,
-            pointBackgroundColor: '#fa709a',
-            pointBorderColor: '#fff',
-            pointBorderWidth: 2
-        }]
-    },
-    options: {
-        ...chartOptions,
-        scales: {
-            y: {
-                beginAtZero: true,
-                ticks: { font: { size: 11 } },
-                grid: { color: 'rgba(0, 0, 0, 0.05)' }
-            },
-            x: {
-                ticks: { font: { size: 11 } },
-                grid: { display: false }
-            }
-        }
-    }
-});
-
-// Weekly Trend Chart (Line with multiple datasets)
-const trendCtx = document.getElementById('trendChart').getContext('2d');
-new Chart(trendCtx, {
-    type: 'line',
-    data: {
-        labels: weeklyTrendData.labels,
-        datasets: [
-            {
-                label: 'Productivity',
-                data: weeklyTrendData.productivity,
-                borderColor: '#667eea',
-                backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                borderWidth: 3,
-                tension: 0.4,
-                fill: true,
-                pointRadius: 4,
-                pointHoverRadius: 6
-            },
-            {
-                label: 'Activity',
-                data: weeklyTrendData.activity,
-                borderColor: '#43e97b',
-                backgroundColor: 'rgba(67, 233, 123, 0.1)',
-                borderWidth: 3,
-                tension: 0.4,
-                fill: true,
-                pointRadius: 4,
-                pointHoverRadius: 6
-            }
-        ]
-    },
-    options: {
-        ...chartOptions,
-        scales: {
-            y: {
-                beginAtZero: true,
-                max: 100,
-                ticks: { font: { size: 11 } },
-                grid: { color: 'rgba(0, 0, 0, 0.05)' }
-            },
-            x: {
-                ticks: { font: { size: 11 } },
-                grid: { display: false }
-            }
-        }
-    }
-});
-
-// Utility functions
-function generateHourlyData() {
-    const hours = Array.from({length: 24}, (_, i) => i);
-    const labels = hours.map(h => h.toString().padStart(2, '0') + ':00');
-    const values = hours.map(() => Math.floor(Math.random() * 100));
-    return { labels, values };
-}
-
-function generateWeeklyTrend() {
-    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    const productivity = days.map(() => Math.floor(Math.random() * 40) + 60);
-    const activity = days.map(() => Math.floor(Math.random() * 40) + 50);
-    return { labels: days, productivity, activity };
-}
-
 function toggleTheme() {
     document.body.classList.toggle('dark-mode');
     localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
-}
-
-function filterView(category) {
-    const cards = document.querySelectorAll('.insight-card');
-    const buttons = document.querySelectorAll('.filter-btn');
-    
-    buttons.forEach(btn => btn.classList.remove('active'));
-    event.target.classList.add('active');
-    
-    if (category === 'all') {
-        cards.forEach(card => card.style.display = 'block');
-    } else {
-        cards.forEach(card => {
-            const cardCategory = card.getAttribute('data-category');
-            card.style.display = cardCategory === category ? 'block' : 'none';
-        });
-    }
 }
 
 function exportReport() {
@@ -459,6 +439,7 @@ function exportReport() {
         languages: languageData,
         commands: commandData,
         files: fileData,
+        dailyCoding: dailyCoding,
         generatedAt: new Date().toISOString()
     };
     
@@ -472,6 +453,10 @@ function exportReport() {
     URL.revokeObjectURL(url);
 }
 
+function refreshDashboard() {
+    vscodeApi.postMessage({ type: 'refresh' });
+}
+
 // Load theme preference
 window.addEventListener('DOMContentLoaded', () => {
     const theme = localStorage.getItem('theme');
@@ -479,9 +464,157 @@ window.addEventListener('DOMContentLoaded', () => {
         document.body.classList.add('dark-mode');
     }
 });
+
+function formatDayLabel(dateStr) {
+    const date = new Date(dateStr + 'T00:00:00');
+    if (Number.isNaN(date.getTime())) {
+        return dateStr;
+    }
+    return date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+}
+
+function requestUpgrade() {
+    vscodeApi.postMessage({ type: 'upgrade' });
+}
+
 </script>
 </body>
 </html>`;
+    }
+    formatActiveHourRange(range) {
+        if (range.earliest === null || range.latest === null) {
+            return 'No data yet';
+        }
+        const clampHour = (value) => Math.min(23, Math.max(0, value));
+        const formatHour = (hour) => {
+            const date = new Date();
+            date.setHours(clampHour(hour), 0, 0, 0);
+            return date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+        };
+        return `${formatHour(range.earliest)} – ${formatHour(range.latest)}`;
+    }
+    buildAchievementsHtml(insight) {
+        const achievements = [
+            {
+                icon: '🌐',
+                name: 'Polyglot',
+                description: 'Worked across 3+ languages',
+                earned: insight.uniqueLanguages >= 3
+            },
+            {
+                icon: '🦉',
+                name: 'Night Owl',
+                description: 'Coding after 10pm',
+                earned: (insight.activeHourRange.latest ?? -1) >= 22
+            },
+            {
+                icon: '🐦',
+                name: 'Early Bird',
+                description: 'Started before 8am',
+                earned: (insight.activeHourRange.earliest ?? 24) <= 7
+            },
+            {
+                icon: '🔥',
+                name: 'Persistence',
+                description: '5+ day active streak',
+                earned: insight.streakDays >= 5
+            },
+            {
+                icon: '⌨️',
+                name: 'Command Master',
+                description: '150+ commands executed',
+                earned: insight.totalCommandsExecuted >= 150
+            },
+            {
+                icon: '👆',
+                name: 'Keystroke Hero',
+                description: 'Logged 500+ keystrokes',
+                earned: insight.totalKeystrokes >= 500
+            },
+            {
+                icon: '📁',
+                name: 'File Jumper',
+                description: '40+ file switches',
+                earned: insight.fileSwitchCount >= 40
+            }
+        ];
+        return achievements.map(achievement => `
+            <div class="badge ${achievement.earned ? 'earned' : ''}">
+                <div class="badge-icon">${achievement.icon}</div>
+                <div class="badge-name">${achievement.name}</div>
+                <div class="badge-desc">${achievement.description}</div>
+            </div>
+        `).join('');
+    }
+    buildAiInsightsHtml(insight) {
+        const suggestionItems = (insight.suggestions && insight.suggestions.length > 0)
+            ? insight.suggestions.map(suggestion => `<li>${suggestion}</li>`).join('')
+            : '<li>Keep coding to unlock personalized AI suggestions.</li>';
+        let tfHighlights = '';
+        if (insight.tfInsights?.featureImportance) {
+            const topFeatures = Object.entries(insight.tfInsights.featureImportance)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 3)
+                .map(([feature, weight]) => {
+                const impact = Math.round(weight * 100);
+                return `
+                        <div class="tf-feature">
+                            <span class="tf-feature-name">${feature}</span>
+                            <span class="tf-feature-weight">${impact}%</span>
+                        </div>
+                    `;
+            })
+                .join('');
+            if (topFeatures) {
+                tfHighlights = `
+                    <div class="tf-highlights">
+                        <h3>Model Highlights</h3>
+                        <div class="tf-feature-grid">
+                            ${topFeatures}
+                        </div>
+                    </div>
+                `;
+            }
+        }
+        return `
+            <ul class="insight-list">
+                ${suggestionItems}
+            </ul>
+            ${tfHighlights}
+        `;
+    }
+    buildPremiumFeaturesHtml() {
+        const premiumFeatures = [
+            {
+                icon: '🧠',
+                title: 'Adaptive Focus Coach',
+                description: 'Get in-IDE nudges tailored to your current energy and momentum.'
+            },
+            {
+                icon: '📈',
+                title: 'Trend Radar',
+                description: 'See multi-week performance trends with predictive AI forecasting.'
+            },
+            {
+                icon: '🤝',
+                title: 'Team Pulse',
+                description: 'Share anonymized benchmarks and celebrate wins with your crew.'
+            },
+            {
+                icon: '🔔',
+                title: 'Smart Nudges',
+                description: 'Receive reminders when goals slip or streaks are at risk.'
+            }
+        ];
+        return premiumFeatures.map(feature => `
+            <div class="premium-feature">
+                <div class="premium-icon">${feature.icon}</div>
+                <div class="premium-copy">
+                    <h3>${feature.title}</h3>
+                    <p>${feature.description}</p>
+                </div>
+            </div>
+        `).join('');
     }
     dispose() {
         this._panel?.dispose();

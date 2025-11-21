@@ -46,7 +46,7 @@ const SignUpComponent = ({ authService, onSignUpSuccess, onLoginClick }) => {
     const [error, setError] = (0, react_1.useState)(null);
     const handleInputChange = (e) => {
         const { name, value } = e.target;
-        setCredentials(prev => ({ ...prev, [name]: value }));
+        setCredentials((prev) => ({ ...prev, [name]: value }));
     };
     const handleSubmit = async (e) => {
         e.preventDefault();

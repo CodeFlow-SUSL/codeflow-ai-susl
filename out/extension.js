@@ -43,6 +43,10 @@ const gamification_1 = require("./gamification");
 const backendServices_1 = require("./backendServices");
 const child_process_1 = require("child_process");
 const path = __importStar(require("path"));
+// TODO: Fix React component compilation issues
+// import { LoginComponent } from './components/auth/LoginComponent';
+// import { SignUpComponent } from './components/auth/SignUpComponent';
+// import { AccountSettingsComponent } from './components/settings/AccountSettingsComponent';
 function activate(context) {
     console.log('CodeFlow AI is now active');
     // Initialize components
@@ -52,6 +56,20 @@ function activate(context) {
     const gamificationSystem = new gamification_1.GamificationSystem(context);
     const backendServices = new backendServices_1.BackendServices(context);
     const backendServicesModule = new backendServices_1.BackendServicesModule(context);
+    // Set up refresh callback for visualization panel
+    visualizationPanel.setRefreshCallback(async () => {
+        try {
+            const insight = await aiAnalyzer.analyzeData(7);
+            const activities = gamificationSystem.getActivitiesForLastWeek();
+            gamificationSystem.checkForNewBadges(activities);
+            visualizationPanel.show(insight);
+            const progress = gamificationSystem.getUserProgress();
+            backendServices.syncData(insight, progress);
+        }
+        catch (error) {
+            vscode.window.showErrorMessage(`Error refreshing report: ${error}`);
+        }
+    });
     // Register commands
     const showReportCommand = vscode.commands.registerCommand('codeflow.showReport', async () => {
         try {
@@ -274,14 +292,39 @@ function activate(context) {
     const upgradeToProCommand = vscode.commands.registerCommand('codeflow.upgradeToPro', async () => {
         await backendServicesModule.getAuthService().upgradeToPro();
     });
-    // Register status bar item
+    // Register status bar item (CodeFlow icon)
     const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
-    statusBarItem.text = "$(chart-line) CodeFlow";
-    statusBarItem.tooltip = "Show CodeFlow Report";
+    statusBarItem.text = '$(rocket) CodeFlow';
+    statusBarItem.tooltip = 'CodeFlow AI - Click to view weekly report';
     statusBarItem.command = 'codeflow.showReport';
+    statusBarItem.color = new vscode.ThemeColor('statusBarItem.prominentForeground');
+    statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.prominentBackground');
     statusBarItem.show();
+    // Update status bar based on tracking state
+    const updateStatusBar = () => {
+        const config = vscode.workspace.getConfiguration('codeflow');
+        const isEnabled = config.get('enabled', true);
+        if (isEnabled) {
+            statusBarItem.text = '$(rocket) CodeFlow';
+            statusBarItem.color = new vscode.ThemeColor('statusBarItem.prominentForeground');
+            statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.prominentBackground');
+        }
+        else {
+            statusBarItem.text = '$(circle-slash) CodeFlow';
+            statusBarItem.color = new vscode.ThemeColor('statusBarItem.warningForeground');
+            statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
+        }
+    };
+    // Initial status bar update
+    updateStatusBar();
+    // Listen for configuration changes to update status bar
+    const configWatcher = vscode.workspace.onDidChangeConfiguration((event) => {
+        if (event.affectsConfiguration('codeflow.enabled')) {
+            updateStatusBar();
+        }
+    });
     // Add to subscriptions
-    context.subscriptions.push(dataCollector, backendServicesModule, showReportCommand, toggleTrackingCommand, showBadgesCommand, enableCloudSyncCommand, configureAPICommand, trainTFModelCommand, setGoalCommand, viewStatsCommand, comparePerformanceCommand, exportDataCommand, loginCommand, logoutCommand, upgradeToProCommand, statusBarItem);
+    context.subscriptions.push(dataCollector, backendServicesModule, showReportCommand, toggleTrackingCommand, showBadgesCommand, enableCloudSyncCommand, configureAPICommand, trainTFModelCommand, setGoalCommand, viewStatsCommand, comparePerformanceCommand, exportDataCommand, loginCommand, logoutCommand, upgradeToProCommand, statusBarItem, configWatcher);
     // Check for new badges periodically
     setInterval(() => {
         const activities = gamificationSystem.getActivitiesForLastWeek();
