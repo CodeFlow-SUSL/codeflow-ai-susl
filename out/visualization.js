@@ -114,7 +114,6 @@ class VisualizationPanel {
 <link href="${styleUri}" rel="stylesheet">
 </head>
 <body>
-<button class="theme-toggle" onclick="toggleTheme()">🌓</button>
 <div class="container">
     <header class="dashboard-header">
         <div class="header-copy">
@@ -269,7 +268,7 @@ const commandData = ${JSON.stringify(insight.mostUsedCommands)};
 const fileData = ${JSON.stringify(insight.mostWorkedFiles)};
 
 // Chart color schemes
-const gradientColors = ['#667eea', '#764ba2', '#f093fb', '#4facfe', '#43e97b', '#fa709a', '#fee140'];
+const gradientColors = ['#0066cc', '#3399ff', '#0099ff', '#00ccff', '#0052cc', '#66b3ff', '#3385ff'];
 const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
@@ -294,8 +293,8 @@ const chartOptions = {
 // Daily Coding Hours (Line)
 const dailyCtx = document.getElementById('dailyChart').getContext('2d');
 const dailyGradient = dailyCtx.createLinearGradient(0, 0, 0, 400);
-dailyGradient.addColorStop(0, 'rgba(102, 126, 234, 0.6)');
-dailyGradient.addColorStop(1, 'rgba(118, 75, 162, 0.1)');
+dailyGradient.addColorStop(0, 'rgba(0, 102, 204, 0.6)');
+dailyGradient.addColorStop(1, 'rgba(51, 153, 255, 0.1)');
 
 const dailyLabels = dailyCoding.map(item => formatDayLabel(item.date));
 const dailyHours = dailyCoding.map(item => Number((item.minutes / 60).toFixed(2)));
@@ -308,13 +307,13 @@ new Chart(dailyCtx, {
             label: 'Hours coded',
             data: dailyHours,
             backgroundColor: dailyGradient,
-            borderColor: '#667eea',
+            borderColor: '#0066cc',
             borderWidth: 3,
             fill: true,
             tension: 0.35,
             pointRadius: 5,
             pointHoverRadius: 7,
-            pointBackgroundColor: '#667eea',
+            pointBackgroundColor: '#0066cc',
             pointBorderColor: '#fff',
             pointBorderWidth: 2
         }]
@@ -363,8 +362,8 @@ new Chart(languageCtx, {
 // Commands Chart (Bar with gradient)
 const commandCtx = document.getElementById('commandChart').getContext('2d');
 const commandGradient = commandCtx.createLinearGradient(0, 0, 0, 400);
-commandGradient.addColorStop(0, 'rgba(102, 126, 234, 0.8)');
-commandGradient.addColorStop(1, 'rgba(118, 75, 162, 0.8)');
+commandGradient.addColorStop(0, 'rgba(0, 102, 204, 0.8)');
+commandGradient.addColorStop(1, 'rgba(51, 153, 255, 0.8)');
 new Chart(commandCtx, {
     type: 'bar',
     data: {
@@ -396,8 +395,8 @@ new Chart(commandCtx, {
 // Files Chart (Horizontal Bar)
 const fileCtx = document.getElementById('fileChart').getContext('2d');
 const fileGradient = fileCtx.createLinearGradient(0, 0, 400, 0);
-fileGradient.addColorStop(0, 'rgba(67, 233, 123, 0.8)');
-fileGradient.addColorStop(1, 'rgba(56, 239, 125, 0.8)');
+fileGradient.addColorStop(0, 'rgba(0, 153, 255, 0.8)');
+fileGradient.addColorStop(1, 'rgba(51, 204, 255, 0.8)');
 
 new Chart(fileCtx, {
     type: 'bar',
