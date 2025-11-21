@@ -113,14 +113,17 @@ export class VisualizationPanel {
     </button>
     <div class="container">
         <header class="dashboard-header">
-        <div class="header-content">
-            <button class="btn export-btn" onclick="exportReport()" style="position: absolute; top: 30px; left: 50%; transform: translateX(-50%); z-index: 10;">
+        <div class="header-content" style="position: relative;">
+            <button class="btn export-btn" onclick="exportReport()" style="position: absolute; top: -30px; left: 50%; transform: translateX(-50%); z-index: 10;">
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M14 11V14H2V11H0V14C0 15.1 0.9 16 2 16H14C15.1 16 16 15.1 16 14V11H14ZM13 7L11.59 5.59L9 8.17V0H7V8.17L4.41 5.59L3 7L8 12L13 7Z" fill="currentColor"/>
                 </svg>
                 Export Report
             </button>
-            <div class="header-copy">
+            <div class="header-logo-bg" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); opacity: 0.08; pointer-events: none; z-index: 0;">
+                <img src="${logoUri}" alt="" style="width: 280px; height: 280px; object-fit: contain;">
+            </div>
+            <div class="header-copy" style="position: relative; z-index: 1;">
                 <span class="eyebrow" id="datetime">📅 ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}</span>
                 <div style="display: flex; align-items: center; gap: 12px;">
                     <img src="${logoUri}" alt="CodeFlow AI Logo" style="width: 40px; height: 40px; object-fit: contain; border: 1px solid #7999ddff; padding: 6px; border-radius: 8px; background: #f8fafc;">
@@ -132,7 +135,7 @@ export class VisualizationPanel {
                 <span class="meta-pill">Active window: ${activeRangeLabel}</span>
                 </div>
             </div>
-            <div class="header-actions">
+            <div class="header-actions" style="position: relative; z-index: 1;">
                 <div class="score-card" style="min-width: 320px; padding: 24px;">
                 <div class="score-ring">
                     <span class="score-value">${insight.productivityScore}</span>
