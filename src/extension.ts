@@ -12,6 +12,9 @@ import * as path from 'path';
 // import { SignUpComponent } from './components/auth/SignUpComponent';
 // import { AccountSettingsComponent } from './components/settings/AccountSettingsComponent';
 
+// Global variable to hold backend services for cleanup
+let backendServicesModuleInstance: BackendServicesModule | undefined;
+
 export function activate(context: vscode.ExtensionContext) {
     console.log('CodeFlow AI is now active');
     
@@ -22,6 +25,7 @@ export function activate(context: vscode.ExtensionContext) {
     const gamificationSystem = new GamificationSystem(context);
     const backendServices = new BackendServices(context);
     const backendServicesModule = new BackendServicesModule(context);
+    backendServicesModuleInstance = backendServicesModule;
     
     // Set up refresh callback for visualization panel
     visualizationPanel.setRefreshCallback(async () => {
@@ -398,4 +402,9 @@ function runNodeScript(scriptPath: string, args: string[]): Promise<string> {
 
 export function deactivate() {
     console.log('CodeFlow AI is now deactivated');
+    
+    // Clean up local server
+    if (backendServicesModuleInstance) {
+        backendServicesModuleInstance.stopLocalServer();
+    }
 }

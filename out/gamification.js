@@ -100,8 +100,9 @@ class GamificationSystem {
             description: 'Code for 7 consecutive days',
             icon: '🔥',
             condition: (activities) => {
-                if (activities.length === 0)
+                if (activities.length === 0) {
                     return false;
+                }
                 const sortedActivities = [...activities].sort((a, b) => a.timestamp - b.timestamp);
                 const days = new Set();
                 sortedActivities.forEach(activity => {
