@@ -130,7 +130,7 @@ export class VisualizationPanel {
     <html lang="en">
     <head>
     <meta charset="UTF-8">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}' 'unsafe-inline'; img-src ${webview.cspSource} data:;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}' ${webview.cspSource} 'unsafe-inline'; img-src ${webview.cspSource} data:;">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CodeFlow Report</title>
     <link href="${styleUri}" rel="stylesheet">
@@ -337,31 +337,41 @@ export class VisualizationPanel {
     }
     setInterval(updateDateTime, 1000);
 
-    // Chart color schemes
-    const gradientColors = ['#1e3a8a', '#2563eb', '#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe', '#dbeafe'];
-    const chartOptions = {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-        legend: { 
-            position: 'bottom',
-            labels: {
-            padding: 15,
-            font: { size: 12 }
-            }
-        },
-        tooltip: {
-            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-            padding: 12,
-            cornerRadius: 8,
-            titleFont: { size: 14, weight: 'bold' },
-            bodyFont: { size: 13 }
+    // Initialize charts when Chart.js is loaded
+    function initializeCharts() {
+        if (typeof Chart === 'undefined') {
+            console.log('Chart.js not loaded yet, retrying...');
+            setTimeout(initializeCharts, 100);
+            return;
         }
-        }
-    };
 
-    // Daily Coding Hours (Line)
-    const dailyCtx = document.getElementById('dailyChart').getContext('2d');
+        console.log('Initializing charts...');
+
+        // Chart color schemes
+        const gradientColors = ['#1e3a8a', '#2563eb', '#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe', '#dbeafe'];
+        const chartOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+            legend: { 
+                position: 'bottom',
+                labels: {
+                padding: 15,
+                font: { size: 12 }
+                }
+            },
+            tooltip: {
+                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                padding: 12,
+                cornerRadius: 8,
+                titleFont: { size: 14, weight: 'bold' },
+                bodyFont: { size: 13 }
+            }
+            }
+        };
+
+        // Daily Coding Hours (Line)
+        const dailyCtx = document.getElementById('dailyChart').getContext('2d');
     const dailyGradient = dailyCtx.createLinearGradient(0, 0, 0, 400);
     dailyGradient.addColorStop(0, 'rgba(37, 99, 235, 0.6)');
     dailyGradient.addColorStop(1, 'rgba(30, 58, 138, 0.1)');
@@ -497,17 +507,181 @@ export class VisualizationPanel {
         }
     });
 
-    async function exportReport() {
-        try {
-            console.log('Export Report clicked');
-            
-            // Show loading indicator
-            const exportBtn = document.querySelector('.export-btn');
-            const originalText = exportBtn ? exportBtn.innerHTML : '';
-            if (exportBtn) {
-                exportBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="2" fill="none" opacity="0.3"/><path d="M8 1 A 7 7 0 0 1 15 8" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"><animateTransform attributeName="transform" type="rotate" from="0 8 8" to="360 8 8" dur="1s" repeatCount="indefinite"/></path></svg> Generating PDF...';
-                exportBtn.disabled = true;
+        console.log('Charts initialized successfully');
+    }
+
+    // Start chart initialization
+    initializeCharts();
+
+    function showExportModal() {
+        // Create modal backdrop
+        const backdrop = document.createElement('div');
+        backdrop.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); z-index: 9999; display: flex; align-items: center; justify-content: center; animation: fadeIn 0.3s ease;';
+        
+        // Create modal card
+        const modal = document.createElement('div');
+        modal.style.cssText = 'background: white; border-radius: 12px; padding: 32px; max-width: 500px; width: 90%; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); animation: slideUp 0.3s ease;';
+        
+        modal.innerHTML = \`
+            <style>
+                @keyframes fadeIn {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+                @keyframes slideUp {
+                    from { transform: translateY(20px); opacity: 0; }
+                    to { transform: translateY(0); opacity: 1; }
+                }
+                .export-modal-title {
+                    font-size: 24px;
+                    font-weight: 700;
+                    color: #1e293b;
+                    margin: 0 0 12px 0;
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                }
+                .export-modal-desc {
+                    color: #64748b;
+                    margin: 0 0 24px 0;
+                    line-height: 1.6;
+                }
+                .export-options {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 12px;
+                    margin-bottom: 24px;
+                }
+                .export-option {
+                    padding: 16px;
+                    border: 2px solid #e2e8f0;
+                    border-radius: 8px;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                }
+                .export-option:hover {
+                    border-color: #0066cc;
+                    background: #f0f7ff;
+                    transform: translateY(-2px);
+                }
+                .export-option-icon {
+                    font-size: 24px;
+                    flex-shrink: 0;
+                }
+                .export-option-content {
+                    flex: 1;
+                }
+                .export-option-title {
+                    font-weight: 600;
+                    color: #1e293b;
+                    margin: 0 0 4px 0;
+                }
+                .export-option-desc {
+                    font-size: 13px;
+                    color: #64748b;
+                    margin: 0;
+                }
+                .export-modal-footer {
+                    display: flex;
+                    gap: 12px;
+                    justify-content: flex-end;
+                }
+                .export-modal-btn {
+                    padding: 10px 20px;
+                    border-radius: 6px;
+                    font-weight: 600;
+                    cursor: pointer;
+                    border: none;
+                    transition: all 0.2s;
+                }
+                .export-modal-btn-cancel {
+                    background: #f1f5f9;
+                    color: #475569;
+                }
+                .export-modal-btn-cancel:hover {
+                    background: #e2e8f0;
+                }
+            </style>
+            <h2 class="export-modal-title">
+                <span>📊</span>
+                Export Your Report
+            </h2>
+            <p class="export-modal-desc">
+                Choose how you'd like to download your CodeFlow productivity report.
+            </p>
+            <div class="export-options">
+                <div class="export-option" onclick="downloadPDF()">
+                    <span class="export-option-icon">📄</span>
+                    <div class="export-option-content">
+                        <h3 class="export-option-title">PDF Report</h3>
+                        <p class="export-option-desc">Professional formatted report with all metrics and insights</p>
+                    </div>
+                </div>
+                <div class="export-option" onclick="downloadJSON()">
+                    <span class="export-option-icon">💾</span>
+                    <div class="export-option-content">
+                        <h3 class="export-option-title">JSON Data</h3>
+                        <p class="export-option-desc">Raw data export for further analysis or integration</p>
+                    </div>
+                </div>
+                <div class="export-option" onclick="downloadInsights()">
+                    <span class="export-option-icon">🧠</span>
+                    <div class="export-option-content">
+                        <h3 class="export-option-title">AI Insights</h3>
+                        <p class="export-option-desc">Detailed analysis and recommendations in JSON format</p>
+                    </div>
+                </div>
+            </div>
+            <div class="export-modal-footer">
+                <button class="export-modal-btn export-modal-btn-cancel" onclick="closeExportModal()">
+                    Cancel
+                </button>
+            </div>
+        \`;
+        
+        backdrop.appendChild(modal);
+        document.body.appendChild(backdrop);
+        
+        // Close on backdrop click
+        backdrop.addEventListener('click', (e) => {
+            if (e.target === backdrop) {
+                closeExportModal();
             }
+        });
+        
+        // Store reference for closing
+        window.exportModalBackdrop = backdrop;
+    }
+    
+    function closeExportModal() {
+        const backdrop = window.exportModalBackdrop;
+        if (backdrop) {
+            backdrop.style.animation = 'fadeOut 0.2s ease';
+            setTimeout(() => {
+                backdrop.remove();
+                window.exportModalBackdrop = null;
+            }, 200);
+        }
+    }
+    
+    function exportReport() {
+        showExportModal();
+    }
+    
+    async function downloadPDF() {
+        closeExportModal();
+        
+        try {
+            console.log('Downloading PDF...');
+            
+            // Show loading notification
+            const notification = document.createElement('div');
+            notification.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #0066cc; color: white; padding: 16px 24px; border-radius: 8px; z-index: 10000; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); animation: slideInRight 0.3s ease;';
+            notification.innerHTML = '<div style="display: flex; align-items: center; gap: 12px;"><div style="width: 16px; height: 16px; border: 2px solid white; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite;"></div><span>Generating PDF report...</span></div><style>@keyframes spin { to { transform: rotate(360deg); } } @keyframes slideInRight { from { transform: translateX(400px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }</style>';
+            document.body.appendChild(notification);
 
             // Check if jsPDF is loaded
             console.log('Checking jsPDF:', typeof window.jspdf);
@@ -680,21 +854,70 @@ export class VisualizationPanel {
             const fileName = 'codeflow-report-' + new Date().toISOString().split('T')[0] + '.pdf';
             pdf.save(fileName);
 
-            // Reset button
-            if (exportBtn) {
-                exportBtn.innerHTML = originalText;
-                exportBtn.disabled = false;
-            }
+            // Remove loading notification and show success
+            notification.remove();
+            const successNotif = document.createElement('div');
+            successNotif.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #10b981; color: white; padding: 16px 24px; border-radius: 8px; z-index: 10000; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); animation: slideInRight 0.3s ease;';
+            successNotif.innerHTML = '<div style="display: flex; align-items: center; gap: 12px;"><span>✓</span><span>PDF downloaded successfully!</span></div>';
+            document.body.appendChild(successNotif);
+            setTimeout(() => successNotif.remove(), 3000);
+            
         } catch (error) {
             console.error('Error generating PDF:', error);
             console.error('Error details:', error.message, error.stack);
-            alert('Failed to generate PDF: ' + (error.message || 'Unknown error. Check console for details.'));
-            const exportBtn = document.querySelector('.export-btn');
-            if (exportBtn) {
-                exportBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 11V14H2V11H0V14C0 15.1 0.9 16 2 16H14C15.1 16 16 15.1 16 14V11H14ZM13 7L11.59 5.59L9 8.17V0H7V8.17L4.41 5.59L3 7L8 12L13 7Z" fill="currentColor"/></svg> Export Report';
-                exportBtn.disabled = false;
-            }
+            
+            const errorNotif = document.createElement('div');
+            errorNotif.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #ef4444; color: white; padding: 16px 24px; border-radius: 8px; z-index: 10000; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);';
+            errorNotif.innerHTML = '<div style="display: flex; align-items: center; gap: 12px;"><span>✕</span><span>Failed to generate PDF. Please try again.</span></div>';
+            document.body.appendChild(errorNotif);
+            setTimeout(() => errorNotif.remove(), 4000);
         }
+    }
+    
+    function downloadJSON() {
+        closeExportModal();
+        
+        try {
+            const reportData = {
+                productivityScore: ${insight.productivityScore},
+                languages: languageData,
+                commands: commandData,
+                files: fileData,
+                dailyCoding: dailyCoding,
+                generatedAt: new Date().toISOString()
+            };
+            
+            const dataStr = JSON.stringify(reportData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'codeflow-report-' + new Date().toISOString().split('T')[0] + '.json';
+            link.click();
+            URL.revokeObjectURL(url);
+            
+            // Show success notification
+            const successNotif = document.createElement('div');
+            successNotif.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #10b981; color: white; padding: 16px 24px; border-radius: 8px; z-index: 10000; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);';
+            successNotif.innerHTML = '<div style="display: flex; align-items: center; gap: 12px;"><span>✓</span><span>JSON data downloaded successfully!</span></div>';
+            document.body.appendChild(successNotif);
+            setTimeout(() => successNotif.remove(), 3000);
+        } catch (error) {
+            console.error('Error downloading JSON:', error);
+            alert('Failed to download JSON data.');
+        }
+    }
+    
+    function downloadInsights() {
+        closeExportModal();
+        exportInsights();
+        
+        // Show success notification
+        const successNotif = document.createElement('div');
+        successNotif.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #10b981; color: white; padding: 16px 24px; border-radius: 8px; z-index: 10000; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);';
+        successNotif.innerHTML = '<div style="display: flex; align-items: center; gap: 12px;"><span>✓</span><span>AI Insights downloaded successfully!</span></div>';
+        document.body.appendChild(successNotif);
+        setTimeout(() => successNotif.remove(), 3000);
     }
 
     function refreshDashboard() {
