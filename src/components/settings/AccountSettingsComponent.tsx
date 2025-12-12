@@ -1,37 +1,8 @@
 import * as React from 'react';
 import { useState, useEffect } from 'react';
-
-// Types defined locally since backend services don't exist yet
-interface User {
-    id: string;
-    email: string;
-    name: string;
-}
-
-interface PaymentMethod {
-    id: string;
-    type: string;
-    last4: string;
-}
-
-interface SubscriptionPlan {
-    id: string;
-    name: string;
-    price: number;
-}
-
-// Mock service interfaces
-interface AuthService {
-    getCurrentUser(): Promise<User>;
-    updateProfile(data: any): Promise<void>;
-    logout(): Promise<void>;
-}
-
-interface ApiService {
-    getPaymentMethods(): Promise<PaymentMethod[]>;
-    getSubscriptionPlan(): Promise<SubscriptionPlan>;
-    updateSubscription(planId: string): Promise<void>;
-}
+import { User, PaymentMethod, SubscriptionPlan } from '../../backendServices/types';
+import { AuthService } from '../../backendServices/authService';
+import { ApiService } from '../../backendServices/apiService';
 
 interface AccountSettingsComponentProps {
   authService: AuthService;
@@ -102,97 +73,79 @@ export const AccountSettingsComponent: React.FC<AccountSettingsComponentProps> =
     onLogout();
   };
 
-  const h = React.createElement;
+  return (
+    <div className="account-settings">
+      <h2>Account Settings</h2>
+      
+      {user && (
+        <div className="user-info">
+          <div className="user-avatar">
+            {user.photoURL ? (
+              <img src={user.photoURL} alt={user.displayName || user.email} />
+            ) : (
+              <div className="avatar-placeholder">
+                {(user.displayName || user.email).charAt(0).toUpperCase()}
+              </div>
+            )}
+          </div>
+          <div className="user-details">
+            <h3>{user.displayName || 'User'}</h3>
+            <p>{user.email}</p>
+            <div className={`user-plan ${user.plan}`}>
+              {user.plan === 'pro' ? 'Pro Plan' : 'Free Plan'}
+            </div>
+          </div>
+        </div>
+      )}
 
-  return h(
-    'div',
-    { className: 'account-settings' },
-    h('h2', null, 'Account Settings'),
-    user
-      ? h(
-          'div',
-          { className: 'user-info' },
-          h(
-            'div',
-            { className: 'user-avatar' },
-            user.photoURL
-              ? h('img', { src: user.photoURL, alt: user.displayName || user.email })
-              : h(
-                  'div',
-                  { className: 'avatar-placeholder' },
-                  (user.displayName || user.email).charAt(0).toUpperCase()
-                )
-          ),
-          h(
-            'div',
-            { className: 'user-details' },
-            h('h3', null, user.displayName || 'User'),
-            h('p', null, user.email),
-            h('div', { className: `user-plan ${user.plan}` }, user.plan === 'pro' ? 'Pro Plan' : 'Free Plan')
-          )
-        )
-      : null,
-    h(
-      'div',
-      { className: 'settings-section' },
-      h('h3', null, 'Subscription'),
-      user?.plan === 'free'
-        ? h(
-            'div',
-            { className: 'upgrade-section' },
-            h('p', null, 'Upgrade to Pro to unlock advanced features:'),
-            h(
-              'ul',
-              null,
-              h('li', null, 'Advanced analytics and insights'),
-              h('li', null, 'Team collaboration features'),
-              h('li', null, 'Unlimited activity history'),
-              h('li', null, 'Priority support')
-            ),
-            h(
-              'button',
-              {
-                onClick: handleUpgradeToPro,
-                disabled: isLoading,
-                className: 'upgrade-button',
-              },
-              isLoading ? 'Processing...' : 'Upgrade to Pro'
-            )
-          )
-        : h(
-            'div',
-            { className: 'pro-status' },
-            h('p', null, 'You are currently on the Pro plan. Thank you for your support!')
-          )
-    ),
-    h(
-      'div',
-      { className: 'settings-section' },
-      h('h3', null, 'Payment Methods'),
-      paymentMethods.length > 0
-        ? h(
-            'div',
-            { className: 'payment-methods' },
-            ...paymentMethods.map((method) =>
-              h(
-                'div',
-                { key: method.id, className: 'payment-method' },
-                h('span', null, `${method.brand} •••• ${method.last4}`),
-                h('span', null, `Expires ${method.expiryMonth}/${method.expiryYear}`)
-              )
-            )
-          )
-        : h('p', null, 'No payment methods added')
-    ),
-    h(
-      'div',
-      { className: 'settings-section' },
-      h('h3', null, 'Danger Zone'),
-      h(
-        'button',
-        { onClick: handleLogout, className: 'logout-button' },
-        'Logout'
-      )
-    )
+      <div className="settings-section">
+        <h3>Subscription</h3>
+        {user?.plan === 'free' ? (
+          <div className="upgrade-section">
+            <p>Upgrade to Pro to unlock advanced features:</p>
+            <ul>
+              <li>Advanced analytics and insights</li>
+              <li>Team collaboration features</li>
+              <li>Unlimited activity history</li>
+              <li>Priority support</li>
+            </ul>
+            <button 
+              onClick={handleUpgradeToPro} 
+              disabled={isLoading}
+              className="upgrade-button"
+            >
+              {isLoading ? 'Processing...' : 'Upgrade to Pro'}
+            </button>
+          </div>
+        ) : (
+          <div className="pro-status">
+            <p>You are currently on the Pro plan. Thank you for your support!</p>
+          </div>
+        )}
+      </div>
+
+      <div className="settings-section">
+        <h3>Payment Methods</h3>
+        {paymentMethods.length > 0 ? (
+          <div className="payment-methods">
+            {paymentMethods.map(method => (
+              <div key={method.id} className="payment-method">
+                <span>{method.brand} •••• {method.last4}</span>
+                <span>Expires {method.expiryMonth}/{method.expiryYear}</span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p>No payment methods added</p>
+        )}
+      </div>
+
+      <div className="settings-section">
+        <h3>Danger Zone</h3>
+        <button onClick={handleLogout} className="logout-button">
+          Logout
+        </button>
+      </div>
+    </div>
   );
 };

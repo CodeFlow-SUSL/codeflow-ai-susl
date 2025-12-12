@@ -1,17 +1,7 @@
 import * as React from 'react';
 import { useState } from 'react';
-
-// Types defined locally since backend services don't exist yet
-interface SignUpCredentials {
-    email: string;
-    password: string;
-    confirmPassword: string;
-}
-
-// Mock auth service interface
-interface AuthService {
-    signUp(credentials: SignUpCredentials): Promise<void>;
-}
+import { SignUpCredentials } from '../../backendServices/types';
+import { AuthService } from '../../backendServices/authService';
 
 interface SignUpComponentProps {
   authService: AuthService;
@@ -34,7 +24,7 @@ export const SignUpComponent: React.FC<SignUpComponentProps> = ({
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setCredentials((prev: SignUpCredentials) => ({ ...prev, [name]: value }));
+    setCredentials(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -54,66 +44,52 @@ export const SignUpComponent: React.FC<SignUpComponentProps> = ({
     }
   };
 
-  return React.createElement(
-    'div',
-    { className: 'auth-container' },
-    React.createElement('h2', null, 'Sign up for CodeFlow'),
-    error && React.createElement('div', { className: 'error-message' }, error),
-    React.createElement(
-      'form',
-      { onSubmit: handleSubmit },
-      React.createElement(
-        'div',
-        { className: 'form-group' },
-        React.createElement('label', { htmlFor: 'displayName' }, 'Display Name (Optional)'),
-        React.createElement('input', {
-          type: 'text',
-          id: 'displayName',
-          name: 'displayName',
-          value: credentials.displayName,
-          onChange: handleInputChange
-        })
-      ),
-      React.createElement(
-        'div',
-        { className: 'form-group' },
-        React.createElement('label', { htmlFor: 'email' }, 'Email'),
-        React.createElement('input', {
-          type: 'email',
-          id: 'email',
-          name: 'email',
-          value: credentials.email,
-          onChange: handleInputChange,
-          required: true
-        })
-      ),
-      React.createElement(
-        'div',
-        { className: 'form-group' },
-        React.createElement('label', { htmlFor: 'password' }, 'Password'),
-        React.createElement('input', {
-          type: 'password',
-          id: 'password',
-          name: 'password',
-          value: credentials.password,
-          onChange: handleInputChange,
-          required: true
-        })
-      ),
-      React.createElement(
-        'button',
-        { type: 'submit', disabled: isLoading },
-        isLoading ? 'Creating account...' : 'Sign Up'
-      )
-    ),
-    React.createElement(
-      'div',
-      { className: 'auth-links' },
-      React.createElement(
-        'button',
-        { type: 'button', onClick: onLoginClick },
-        'Already have an account? Login'
-      )
-    )
+  return (
+    <div className="auth-container">
+      <h2>Sign up for CodeFlow</h2>
+      {error && <div className="error-message">{error}</div>}
+      <form onSubmit={handleSubmit}>
+        <div className="form-group">
+          <label htmlFor="displayName">Display Name (Optional)</label>
+          <input
+            type="text"
+            id="displayName"
+            name="displayName"
+            value={credentials.displayName}
+            onChange={handleInputChange}
+          />
+        </div>
+        <div className="form-group">
+          <label htmlFor="email">Email</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            value={credentials.email}
+            onChange={handleInputChange}
+            required
+          />
+        </div>
+        <div className="form-group">
+          <label htmlFor="password">Password</label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            value={credentials.password}
+            onChange={handleInputChange}
+            required
+          />
+        </div>
+        <button type="submit" disabled={isLoading}>
+          {isLoading ? 'Creating account...' : 'Sign Up'}
+        </button>
+      </form>
+      <div className="auth-links">
+        <button type="button" onClick={onLoginClick}>
+          Already have an account? Login
+        </button>
+      </div>
+    </div>
   );
 };

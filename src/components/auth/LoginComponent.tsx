@@ -1,16 +1,7 @@
 import * as React from 'react';
 import { useState } from 'react';
-
-// Types defined locally since backend services don't exist yet
-interface LoginCredentials {
-    email: string;
-    password: string;
-}
-
-// Mock auth service interface
-interface AuthService {
-    login(credentials: LoginCredentials): Promise<void>;
-}
+import { LoginCredentials } from '../../backendServices/types';
+import { AuthService } from '../../backendServices/authService';
 
 interface LoginComponentProps {
   authService: AuthService;
@@ -32,13 +23,14 @@ export const LoginComponent: React.FC<LoginComponentProps> = ({
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setCredentials((prev: LoginCredentials) => ({ ...prev, [name]: value }));
+    setCredentials(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
+
     try {
       const success = await authService.login(credentials);
       if (success) {
@@ -51,54 +43,42 @@ export const LoginComponent: React.FC<LoginComponentProps> = ({
     }
   };
 
-  return React.createElement(
-    'div',
-    { className: 'auth-container' },
-    React.createElement('h2', null, 'Login to CodeFlow'),
-    error && React.createElement('div', { className: 'error-message' }, error),
-    React.createElement(
-      'form',
-      { onSubmit: handleSubmit },
-      React.createElement(
-        'div',
-        { className: 'form-group' },
-        React.createElement('label', { htmlFor: 'email' }, 'Email'),
-        React.createElement('input', {
-          type: 'email',
-          id: 'email',
-          name: 'email',
-          value: credentials.email,
-          onChange: handleInputChange,
-          required: true
-        })
-      ),
-      React.createElement(
-        'div',
-        { className: 'form-group' },
-        React.createElement('label', { htmlFor: 'password' }, 'Password'),
-        React.createElement('input', {
-          type: 'password',
-          id: 'password',
-          name: 'password',
-          value: credentials.password,
-          onChange: handleInputChange,
-          required: true
-        })
-      ),
-      React.createElement(
-        'button',
-        { type: 'submit', disabled: isLoading },
-        isLoading ? 'Logging in...' : 'Login'
-      )
-    ),
-    React.createElement(
-      'div',
-      { className: 'auth-links' },
-      React.createElement(
-        'button',
-        { type: 'button', onClick: onSignUpClick },
-        "Don't have an account? Sign up"
-      )
-    )
+  return (
+    <div className="auth-container">
+      <h2>Login to CodeFlow</h2>
+      {error && <div className="error-message">{error}</div>}
+      <form onSubmit={handleSubmit}>
+        <div className="form-group">
+          <label htmlFor="email">Email</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            value={credentials.email}
+            onChange={handleInputChange}
+            required
+          />
+        </div>
+        <div className="form-group">
+          <label htmlFor="password">Password</label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            value={credentials.password}
+            onChange={handleInputChange}
+            required
+          />
+        </div>
+        <button type="submit" disabled={isLoading}>
+          {isLoading ? 'Logging in...' : 'Login'}
+        </button>
+      </form>
+      <div className="auth-links">
+        <button type="button" onClick={onSignUpClick}>
+          Don't have an account? Sign up
+        </button>
+      </div>
+    </div>
   );
 };
