@@ -102,6 +102,8 @@ class VisualizationPanel {
     }
     _getHtmlForWebview(webview, insight) {
         const chartJsScriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, 'node_modules', 'chart.js', 'dist', 'chart.umd.js'));
+        const jsPdfScriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, 'node_modules', 'jspdf', 'dist', 'jspdf.umd.min.js'));
+        const html2canvasScriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, 'node_modules', 'html2canvas', 'dist', 'html2canvas.min.js'));
         const styleUri = webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, 'media', 'styles.css'));
         const logoUri = webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, 'icon', '2.png'));
         const nonce = getNonce();
@@ -316,7 +318,14 @@ class VisualizationPanel {
     </div>
 
     <script nonce="${nonce}" src="${chartJsScriptUri}"></script>
+    <script nonce="${nonce}" src="${jsPdfScriptUri}"></script>
+    <script nonce="${nonce}" src="${html2canvasScriptUri}"></script>
     <script nonce="${nonce}">
+    console.log('Scripts loading...');
+    console.log('Chart.js available:', typeof Chart);
+    console.log('jsPDF available:', typeof window.jspdf);
+    console.log('html2canvas available:', typeof html2canvas);
+    
     const vscodeApi = typeof acquireVsCodeApi === 'function' ? acquireVsCodeApi() : { postMessage: () => {} };
     const dailyCoding = ${JSON.stringify(insight.dailyCodingMinutes)};
     const languageData = ${JSON.stringify(insight.languageDistribution)};
@@ -493,24 +502,204 @@ class VisualizationPanel {
         }
     });
 
-    function exportReport() {
-        const reportData = {
-        productivityScore: ${insight.productivityScore},
-        languages: languageData,
-        commands: commandData,
-        files: fileData,
-        dailyCoding: dailyCoding,
-        generatedAt: new Date().toISOString()
-        };
-        
-        const dataStr = JSON.stringify(reportData, null, 2);
-        const dataBlob = new Blob([dataStr], { type: 'application/json' });
-        const url = URL.createObjectURL(dataBlob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = 'codeflow-report-' + new Date().toISOString().split('T')[0] + '.json';
-        link.click();
-        URL.revokeObjectURL(url);
+    async function exportReport() {
+        try {
+            console.log('Export Report clicked');
+            
+            // Show loading indicator
+            const exportBtn = document.querySelector('.export-btn');
+            const originalText = exportBtn ? exportBtn.innerHTML : '';
+            if (exportBtn) {
+                exportBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="2" fill="none" opacity="0.3"/><path d="M8 1 A 7 7 0 0 1 15 8" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"><animateTransform attributeName="transform" type="rotate" from="0 8 8" to="360 8 8" dur="1s" repeatCount="indefinite"/></path></svg> Generating PDF...';
+                exportBtn.disabled = true;
+            }
+
+            // Check if jsPDF is loaded
+            console.log('Checking jsPDF:', typeof window.jspdf);
+            if (!window.jspdf) {
+                throw new Error('jsPDF library not loaded. Please reload the page.');
+            }
+
+            // Initialize jsPDF
+            const { jsPDF } = window.jspdf;
+            console.log('jsPDF loaded:', typeof jsPDF);
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            console.log('PDF instance created');
+            
+            const pageWidth = pdf.internal.pageSize.getWidth();
+            const pageHeight = pdf.internal.pageSize.getHeight();
+            const margin = 15;
+            let yPos = margin;
+
+            // Helper function to add new page if needed
+            function checkNewPage(requiredSpace) {
+                if (yPos + requiredSpace > pageHeight - margin) {
+                    pdf.addPage();
+                    yPos = margin;
+                    return true;
+                }
+                return false;
+            }
+
+            // Title
+            pdf.setFontSize(24);
+            pdf.setTextColor(0, 102, 204);
+            pdf.text('CodeFlow AI Report', pageWidth / 2, yPos, { align: 'center' });
+            yPos += 10;
+
+            // Date
+            pdf.setFontSize(10);
+            pdf.setTextColor(100, 100, 100);
+            pdf.text(new Date().toLocaleDateString() + ' | ' + new Date().toLocaleTimeString(), pageWidth / 2, yPos, { align: 'center' });
+            yPos += 15;
+
+            // Productivity Score Box
+            pdf.setFillColor(37, 99, 235);
+            pdf.roundedRect(pageWidth / 2 - 30, yPos, 60, 25, 3, 3, 'F');
+            pdf.setFontSize(32);
+            pdf.setTextColor(255, 255, 255);
+            pdf.text('${insight.productivityScore}', pageWidth / 2, yPos + 13, { align: 'center' });
+            pdf.setFontSize(10);
+            pdf.text('Productivity Score', pageWidth / 2, yPos + 20, { align: 'center' });
+            yPos += 35;
+
+            // Key Metrics Section
+            pdf.setFontSize(16);
+            pdf.setTextColor(0, 0, 0);
+            pdf.text('📊 Key Metrics', margin, yPos);
+            yPos += 8;
+
+            const metrics = [
+                { label: 'Total Coding Time', value: '${totalCodingHours}h' },
+                { label: 'Average per Day', value: '${averageDailyHours}h' },
+                { label: 'Current Streak', value: '${streakLabel}' },
+                { label: 'Commands Executed', value: '${totalCommandsFormatted}' },
+                { label: 'Keystrokes Tracked', value: '${totalKeystrokesFormatted}' },
+                { label: 'Files Touched', value: '${uniqueFilesFormatted}' },
+                { label: 'Languages Used', value: '${insight.uniqueLanguages}' },
+                { label: 'Active Window', value: '${activeRangeLabel}' }
+            ];
+
+            pdf.setFontSize(10);
+            const colWidth = (pageWidth - 2 * margin) / 2;
+            metrics.forEach((metric, index) => {
+                const col = index % 2;
+                const row = Math.floor(index / 2);
+                const x = margin + col * colWidth;
+                const y = yPos + row * 10;
+
+                pdf.setTextColor(100, 100, 100);
+                pdf.text(metric.label + ':', x, y);
+                pdf.setTextColor(0, 102, 204);
+                pdf.setFont(undefined, 'bold');
+                pdf.text(metric.value, x + colWidth - 40, y);
+                pdf.setFont(undefined, 'normal');
+            });
+            yPos += Math.ceil(metrics.length / 2) * 10 + 10;
+
+            // Language Distribution
+            checkNewPage(60);
+            pdf.setFontSize(14);
+            pdf.setTextColor(0, 0, 0);
+            pdf.text('🌐 Language Distribution', margin, yPos);
+            yPos += 8;
+
+            pdf.setFontSize(9);
+            languageData.slice(0, 8).forEach((lang, index) => {
+                pdf.setTextColor(100, 100, 100);
+                pdf.text(lang.language, margin + 5, yPos);
+                
+                // Progress bar
+                const barWidth = 100;
+                const barHeight = 4;
+                pdf.setFillColor(220, 220, 220);
+                pdf.rect(margin + 60, yPos - 3, barWidth, barHeight, 'F');
+                pdf.setFillColor(37, 99, 235);
+                pdf.rect(margin + 60, yPos - 3, barWidth * (lang.percentage / 100), barHeight, 'F');
+                
+                pdf.setTextColor(0, 102, 204);
+                pdf.text(lang.percentage.toFixed(1) + '%', margin + 165, yPos);
+                yPos += 7;
+            });
+            yPos += 10;
+
+            // Most Used Commands
+            checkNewPage(60);
+            pdf.setFontSize(14);
+            pdf.setTextColor(0, 0, 0);
+            pdf.text('⌨️ Most Used Commands', margin, yPos);
+            yPos += 8;
+
+            pdf.setFontSize(9);
+            commandData.slice(0, 8).forEach((cmd, index) => {
+                pdf.setTextColor(100, 100, 100);
+                const cmdText = cmd.command.length > 35 ? cmd.command.substring(0, 32) + '...' : cmd.command;
+                pdf.text(cmdText, margin + 5, yPos);
+                
+                // Progress bar
+                const maxCount = Math.max(...commandData.map(c => c.count));
+                const barWidth = 70;
+                const barHeight = 4;
+                pdf.setFillColor(220, 220, 220);
+                pdf.rect(margin + 90, yPos - 3, barWidth, barHeight, 'F');
+                pdf.setFillColor(37, 99, 235);
+                pdf.rect(margin + 90, yPos - 3, barWidth * (cmd.count / maxCount), barHeight, 'F');
+                
+                pdf.setTextColor(0, 102, 204);
+                pdf.text(cmd.count.toString(), margin + 165, yPos);
+                yPos += 7;
+            });
+            yPos += 10;
+
+            // AI Insights
+            checkNewPage(40);
+            pdf.setFontSize(14);
+            pdf.setTextColor(0, 0, 0);
+            pdf.text('🤖 AI-Powered Insights', margin, yPos);
+            yPos += 8;
+
+            pdf.setFontSize(9);
+            pdf.setTextColor(60, 60, 60);
+            const insights = ${JSON.stringify(insight.suggestions)};
+            insights.slice(0, 5).forEach((suggestion, index) => {
+                const lines = pdf.splitTextToSize('• ' + suggestion, pageWidth - 2 * margin - 5);
+                lines.forEach(line => {
+                    checkNewPage(7);
+                    pdf.text(line, margin + 5, yPos);
+                    yPos += 5;
+                });
+                yPos += 2;
+            });
+
+            // Footer
+            const totalPages = pdf.internal.getNumberOfPages();
+            for (let i = 1; i <= totalPages; i++) {
+                pdf.setPage(i);
+                pdf.setFontSize(8);
+                pdf.setTextColor(150, 150, 150);
+                pdf.text('Generated by CodeFlow AI • ' + new Date().toLocaleDateString(), pageWidth / 2, pageHeight - 10, { align: 'center' });
+                pdf.text('Page ' + i + ' of ' + totalPages, pageWidth - margin, pageHeight - 10, { align: 'right' });
+            }
+
+            // Save PDF
+            const fileName = 'codeflow-report-' + new Date().toISOString().split('T')[0] + '.pdf';
+            pdf.save(fileName);
+
+            // Reset button
+            if (exportBtn) {
+                exportBtn.innerHTML = originalText;
+                exportBtn.disabled = false;
+            }
+        } catch (error) {
+            console.error('Error generating PDF:', error);
+            console.error('Error details:', error.message, error.stack);
+            alert('Failed to generate PDF: ' + (error.message || 'Unknown error. Check console for details.'));
+            const exportBtn = document.querySelector('.export-btn');
+            if (exportBtn) {
+                exportBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 11V14H2V11H0V14C0 15.1 0.9 16 2 16H14C15.1 16 16 15.1 16 14V11H14ZM13 7L11.59 5.59L9 8.17V0H7V8.17L4.41 5.59L3 7L8 12L13 7Z" fill="currentColor"/></svg> Export Report';
+                exportBtn.disabled = false;
+            }
+        }
     }
 
     function refreshDashboard() {
@@ -634,8 +823,8 @@ class VisualizationPanel {
                 icon: '⚡',
                 name: 'Speed Demon',
                 description: '4+ hours in a single day',
-                earned: Math.max(...insight.dailyCodingMinutes) / 60 >= 4,
-                progress: Math.min(100, (Math.max(...insight.dailyCodingMinutes) / 60 / 4) * 100),
+                earned: Math.max(...insight.dailyCodingMinutes.map(d => d.minutes)) / 60 >= 4,
+                progress: Math.min(100, (Math.max(...insight.dailyCodingMinutes.map(d => d.minutes)) / 60 / 4) * 100),
                 rarity: 'rare',
                 category: 'Productivity'
             },
@@ -801,8 +990,8 @@ class VisualizationPanel {
                 icon: '🧘',
                 name: 'Deep Focus',
                 description: 'Focused session 2+ hours',
-                earned: Math.max(...insight.dailyCodingMinutes) / 60 >= 2,
-                progress: Math.min(100, (Math.max(...insight.dailyCodingMinutes) / 60 / 2) * 100),
+                earned: Math.max(...insight.dailyCodingMinutes.map(d => d.minutes)) / 60 >= 2,
+                progress: Math.min(100, (Math.max(...insight.dailyCodingMinutes.map(d => d.minutes)) / 60 / 2) * 100),
                 rarity: 'rare',
                 category: 'Focus'
             },
@@ -810,8 +999,8 @@ class VisualizationPanel {
                 icon: '🎯',
                 name: 'Flow State',
                 description: 'Focused session 6+ hours',
-                earned: Math.max(...insight.dailyCodingMinutes) / 60 >= 6,
-                progress: Math.min(100, (Math.max(...insight.dailyCodingMinutes) / 60 / 6) * 100),
+                earned: Math.max(...insight.dailyCodingMinutes.map(d => d.minutes)) / 60 >= 6,
+                progress: Math.min(100, (Math.max(...insight.dailyCodingMinutes.map(d => d.minutes)) / 60 / 6) * 100),
                 rarity: 'legendary',
                 category: 'Focus'
             },
@@ -847,8 +1036,9 @@ class VisualizationPanel {
         // Sort: earned first, then by rarity
         const rarityOrder = { 'legendary': 0, 'epic': 1, 'rare': 2, 'common': 3 };
         achievements.sort((a, b) => {
-            if (a.earned !== b.earned)
+            if (a.earned !== b.earned) {
                 return a.earned ? -1 : 1;
+            }
             return (rarityOrder[a.rarity] || 4) - (rarityOrder[b.rarity] || 4);
         });
         // Count earned badges by rarity
