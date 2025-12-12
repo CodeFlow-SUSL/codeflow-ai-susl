@@ -141,7 +141,7 @@ class VisualizationPanel {
     <link href="${styleUri}" rel="stylesheet">
     </head>
     <body>
-    <button class="refresh-toggle" onclick="refreshDashboard()" aria-label="Refresh dashboard">
+    <button class="refresh-toggle" id="refreshBtn" aria-label="Refresh dashboard">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M13.65 2.35C12.2 0.9 10.21 0 8 0C3.58 0 0.01 3.58 0.01 8C0.01 12.42 3.58 16 8 16C11.73 16 14.84 13.45 15.73 10H13.65C12.83 12.33 10.61 14 8 14C4.69 14 2 11.31 2 8C2 4.69 4.69 2 8 2C9.66 2 11.14 2.69 12.22 3.78L9 7H16V0L13.65 2.35Z" fill="#0066cc"/>
                 </svg>
@@ -149,7 +149,7 @@ class VisualizationPanel {
     <div class="container">
         <header class="dashboard-header">
         <div class="header-content" style="position: relative;">
-            <button class="btn export-btn" onclick="exportReport()" style="position: absolute; top: -30px; left: 50%; transform: translateX(-50%); z-index: 10;">
+            <button class="btn export-btn" id="exportBtn" style="position: absolute; top: -30px; left: 50%; transform: translateX(-50%); z-index: 10;">
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M14 11V14H2V11H0V14C0 15.1 0.9 16 2 16H14C15.1 16 16 15.1 16 14V11H14ZM13 7L11.59 5.59L9 8.17V0H7V8.17L4.41 5.59L3 7L8 12L13 7Z" fill="currentColor"/>
                 </svg>
@@ -312,7 +312,7 @@ class VisualizationPanel {
             <div class="premium-grid">
             ${premiumFeaturesHtml}
             </div>
-            <button class="btn upgrade-btn" onclick="requestUpgrade()">Upgrade to CodeFlow Pro</button>
+            <button class="btn upgrade-btn" id="upgradeBtn">Upgrade to CodeFlow Pro</button>
         </article>
         </section>
     </div>
@@ -518,6 +518,17 @@ class VisualizationPanel {
     // Start chart initialization
     initializeCharts();
 
+    // Attach event listeners to buttons
+    document.addEventListener('DOMContentLoaded', function() {
+        const refreshBtn = document.getElementById('refreshBtn');
+        const exportBtn = document.getElementById('exportBtn');
+        const upgradeBtn = document.getElementById('upgradeBtn');
+        
+        if (refreshBtn) refreshBtn.addEventListener('click', refreshDashboard);
+        if (exportBtn) exportBtn.addEventListener('click', exportReport);
+        if (upgradeBtn) upgradeBtn.addEventListener('click', requestUpgrade);
+    });
+
     function showExportModal() {
         // Create modal backdrop
         const backdrop = document.createElement('div');
@@ -529,6 +540,8 @@ class VisualizationPanel {
         
         modal.innerHTML = \`
             <style>
+                .export-option { cursor: pointer; }
+                .export-modal-btn { cursor: pointer; }
                 @keyframes fadeIn {
                     from { opacity: 0; }
                     to { opacity: 1; }
@@ -618,21 +631,21 @@ class VisualizationPanel {
                 Choose how you'd like to download your CodeFlow productivity report.
             </p>
             <div class="export-options">
-                <div class="export-option" onclick="downloadPDF()">
+                <div class="export-option" data-action="downloadPDF">
                     <span class="export-option-icon">📄</span>
                     <div class="export-option-content">
                         <h3 class="export-option-title">PDF Report</h3>
                         <p class="export-option-desc">Professional formatted report with all metrics and insights</p>
                     </div>
                 </div>
-                <div class="export-option" onclick="downloadJSON()">
+                <div class="export-option" data-action="downloadJSON">
                     <span class="export-option-icon">💾</span>
                     <div class="export-option-content">
                         <h3 class="export-option-title">JSON Data</h3>
                         <p class="export-option-desc">Raw data export for further analysis or integration</p>
                     </div>
                 </div>
-                <div class="export-option" onclick="downloadInsights()">
+                <div class="export-option" data-action="downloadInsights">
                     <span class="export-option-icon">🧠</span>
                     <div class="export-option-content">
                         <h3 class="export-option-title">AI Insights</h3>
@@ -641,7 +654,7 @@ class VisualizationPanel {
                 </div>
             </div>
             <div class="export-modal-footer">
-                <button class="export-modal-btn export-modal-btn-cancel" onclick="closeExportModal()">
+                <button class="export-modal-btn export-modal-btn-cancel" data-action="closeExportModal">
                     Cancel
                 </button>
             </div>
@@ -649,6 +662,18 @@ class VisualizationPanel {
         
         backdrop.appendChild(modal);
         document.body.appendChild(backdrop);
+        
+        // Attach event listeners to modal buttons
+        const exportOptions = modal.querySelectorAll('[data-action]');
+        exportOptions.forEach(option => {
+            option.addEventListener('click', function() {
+                const action = this.getAttribute('data-action');
+                if (action === 'downloadPDF') downloadPDF();
+                else if (action === 'downloadJSON') downloadJSON();
+                else if (action === 'downloadInsights') downloadInsights();
+                else if (action === 'closeExportModal') closeExportModal();
+            });
+        });
         
         // Close on backdrop click
         backdrop.addEventListener('click', (e) => {
