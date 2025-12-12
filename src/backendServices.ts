@@ -1,4 +1,7 @@
 import * as vscode from 'vscode';
+import * as http from 'http';
+import * as fs from 'fs';
+import * as path from 'path';
 import { ProductivityInsight } from './aiAnalyzer';
 import { UserProgress } from './gamification';
 
@@ -6,6 +9,8 @@ export class BackendServices {
     private context: vscode.ExtensionContext;
     private apiEndpoint: string = 'https://api.codeflow.example'; // Replace with your actual API
     private isEnabled: boolean = false;
+    private localServer: http.Server | undefined;
+    private serverPort: number = 3000;
 
     constructor(context: vscode.ExtensionContext) {
         this.context = context;
@@ -129,13 +134,20 @@ export class BackendServicesModule {
         return this.authService;
     }
 
+    public stopLocalServer(): void {
+        this.authService.stopLocalServer();
+    }
+
     public dispose(): void {
         // Cleanup if needed
+        this.stopLocalServer();
     }
 }
 
 class AuthService {
     private context: vscode.ExtensionContext;
+    private localServer: http.Server | undefined;
+    private serverPort: number = 3000;
 
     constructor(context: vscode.ExtensionContext) {
         this.context = context;
@@ -159,13 +171,86 @@ class AuthService {
 
     public async upgradeToPro(): Promise<void> {
         try {
-            // Open localhost pro plan page in browser
-            const uri = vscode.Uri.parse('http://localhost:3000/pro-plan');
+            // Start local server if not already running
+            await this.startLocalServer();
+            
+            // Open pro plan page in browser
+            const uri = vscode.Uri.parse(`http://localhost:${this.serverPort}/pro-plan`);
             await vscode.env.openExternal(uri);
             vscode.window.showInformationMessage('Opening CodeFlow Pro plan in your browser...');
         } catch (error) {
             vscode.window.showErrorMessage(`Failed to open browser: ${error}`);
             console.error('Upgrade error:', error);
+        }
+    }
+
+    private async startLocalServer(): Promise<void> {
+        // If server is already running, return
+        if (this.localServer && this.localServer.listening) {
+            return;
+        }
+
+        return new Promise((resolve, reject) => {
+            try {
+                this.localServer = http.createServer((req, res) => {
+                    console.log(`Request received: ${req.url}`);
+
+                    // Set CORS headers
+                    res.setHeader('Access-Control-Allow-Origin', '*');
+                    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+                    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+                    if (req.url === '/pro-plan' || req.url === '/') {
+                        // Serve the pro plan HTML file
+                        const htmlPath = path.join(this.context.extensionPath, 'media', 'pro-plan.html');
+                        
+                        fs.readFile(htmlPath, 'utf8', (err, data) => {
+                            if (err) {
+                                console.error('Error reading HTML file:', err);
+                                res.writeHead(500, { 'Content-Type': 'text/plain' });
+                                res.end('Error loading page');
+                                return;
+                            }
+                            
+                            res.writeHead(200, { 'Content-Type': 'text/html' });
+                            res.end(data);
+                        });
+                    } else {
+                        res.writeHead(404, { 'Content-Type': 'text/plain' });
+                        res.end('Not Found');
+                    }
+                });
+
+                // Find an available port
+                this.localServer.listen(this.serverPort, () => {
+                    console.log(`Local server started on port ${this.serverPort}`);
+                    resolve();
+                });
+
+                this.localServer.on('error', (err: NodeJS.ErrnoException) => {
+                    if (err.code === 'EADDRINUSE') {
+                        // Port is in use, try next port
+                        this.serverPort++;
+                        this.localServer = undefined;
+                        this.startLocalServer().then(resolve).catch(reject);
+                    } else {
+                        console.error('Server error:', err);
+                        reject(err);
+                    }
+                });
+            } catch (error) {
+                console.error('Error starting server:', error);
+                reject(error);
+            }
+        });
+    }
+
+    public stopLocalServer(): void {
+        if (this.localServer) {
+            this.localServer.close(() => {
+                console.log('Local server stopped');
+            });
+            this.localServer = undefined;
         }
     }
 }

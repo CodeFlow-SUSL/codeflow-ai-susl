@@ -47,6 +47,8 @@ const path = __importStar(require("path"));
 // import { LoginComponent } from './components/auth/LoginComponent';
 // import { SignUpComponent } from './components/auth/SignUpComponent';
 // import { AccountSettingsComponent } from './components/settings/AccountSettingsComponent';
+// Global variable to hold backend services for cleanup
+let backendServicesModuleInstance;
 function activate(context) {
     console.log('CodeFlow AI is now active');
     // Initialize components
@@ -56,6 +58,7 @@ function activate(context) {
     const gamificationSystem = new gamification_1.GamificationSystem(context);
     const backendServices = new backendServices_1.BackendServices(context);
     const backendServicesModule = new backendServices_1.BackendServicesModule(context);
+    backendServicesModuleInstance = backendServicesModule;
     // Set up refresh callback for visualization panel
     visualizationPanel.setRefreshCallback(async () => {
         try {
@@ -364,5 +367,9 @@ function runNodeScript(scriptPath, args) {
 }
 function deactivate() {
     console.log('CodeFlow AI is now deactivated');
+    // Clean up local server
+    if (backendServicesModuleInstance) {
+        backendServicesModuleInstance.stopLocalServer();
+    }
 }
 //# sourceMappingURL=extension.js.map
