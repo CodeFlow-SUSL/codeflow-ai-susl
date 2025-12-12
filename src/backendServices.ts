@@ -159,22 +159,13 @@ class AuthService {
 
     public async upgradeToPro(): Promise<void> {
         try {
-            const result = await vscode.window.showInformationMessage(
-                'Upgrade to CodeFlow Pro for advanced features!',
-                { modal: true },
-                'Learn More',
-                'Upgrade Now'
-            );
-
-            if (result === 'Upgrade Now') {
-                // Open upgrade page
-                vscode.env.openExternal(vscode.Uri.parse('https://codeflow.example/upgrade'));
-            } else if (result === 'Learn More') {
-                // Open features page
-                vscode.env.openExternal(vscode.Uri.parse('https://codeflow.example/features'));
-            }
+            // Open localhost pro plan page in browser
+            const uri = vscode.Uri.parse('http://localhost:3000/pro-plan');
+            await vscode.env.openExternal(uri);
+            vscode.window.showInformationMessage('Opening CodeFlow Pro plan in your browser...');
         } catch (error) {
-            vscode.window.showErrorMessage(`Upgrade failed: ${error}`);
+            vscode.window.showErrorMessage(`Failed to open browser: ${error}`);
+            console.error('Upgrade error:', error);
         }
     }
 }
