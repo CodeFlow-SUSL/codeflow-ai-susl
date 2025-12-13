@@ -1,11 +1,15 @@
+
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CodeFlow Pro</title>
-    <style>
-    /* Commit 11 */
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CodeFlow Pro - Unlock Your Full Potential</title>
+
+ 
+  <style>
+   
     * {
       margin: 0;
       padding: 0;
@@ -27,11 +31,10 @@
       max-width: 1200px;
       width: 100%;
 
-      /* Commit 12: Page fade-in animation */
       animation: fadeIn 0.6s ease-in;
     }
 
-    /* Commit 12 */
+  
     @keyframes fadeIn {
       from {
         opacity: 0;
@@ -44,7 +47,7 @@
       }
     }
 
-    /* Commit 3: Header section */
+  
     .header {
       text-align: center;
       color: #2563eb;
@@ -70,7 +73,7 @@
       color: #666;
     }
 
-    /* Commit 4: Pricing card layout */
+   
     .pricing-cards {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -88,7 +91,7 @@
       overflow: hidden;
     }
 
-    /* Commit 8: Card hover animation */
+    
     .card:hover {
       transform: translateY(-10px);
       box-shadow: 0 30px 80px rgba(66, 66, 66, 0.4);
@@ -181,7 +184,6 @@
       color: #2563eb;
     }
 
-    /* Commit 9: Testimonials */
     .testimonials {
       background: #f8fafc;
       border-radius: 20px;
@@ -213,84 +215,141 @@
       color: #2563eb;
     }
 
-    /* Commit 10: FAQ Section */
-    
+   
+    .faq {
+      background: white;
+      padding: 40px;
+      border-radius: 20px;
+      margin-top: 30px;
+    }
+
+    .faq-item {
+      margin-bottom: 25px;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 20px;
+    }
   </style>
-  </head>
-  <body>
-    <div class="container">
-       <div class="header">
-         <img src="../icon/2.png" alt="" class="logo" />
-         <h1>CodeFlow <span>Pro</span></h1>
-         <p>Supercharge your productivity with advanced features</p>
+</head>
+
+<body>
+
+  <div class="container">
+
+   
+    <div class="header">
+      <div style="display: flex; align-items: center; gap: 15px">
+        <img src="../icon/2.png" alt="" class="logo" />
+        <h1>CodeFlow <span style="
+                background: #2563eb;
+                color: white;
+                padding: 2px 20px;
+                border-radius: 12px;">Pro</span></h1>
+      </div>
+      <p>Supercharge your productivity with advanced features</p>
+    </div>
+
+    
+    <div class="pricing-cards">
+
+   
+      <div class="card">
+        <h2>Free</h2>
+        <div class="price">$0 <span>/ month</span></div>
+        <p>Perfect for getting started</p>
+        <ul class="features">
+          <li>Basic productivity tracking</li>
+          <li>7-day activity history</li>
+          <li>Simple visualizations</li>
+          <li>Basic achievements</li>
+          <li>Email support</li>
+        </ul>
+        <button class="btn btn-secondary">Current Plan</button>
+      </div>
+
+    
+      <div class="card featured">
+        <span class="badge">Most Popular</span>
+        <h2>Pro</h2>
+        <div class="price">$9.99 <span>/ month</span></div>
+        <p>For serious developers</p>
+        <ul class="features">
+          <li>Advanced AI insights</li>
+          <li>Unlimited activity history</li>
+          <li>Advanced analytics & charts</li>
+          <li>Custom goals & reminders</li>
+          <li>Team collaboration</li>
+          <li>Cloud sync</li>
+        </ul>
+        <button class="btn btn-primary">Upgrade to Pro</button>
+      </div>
+
+      
+      <div class="card">
+        <h2>Enterprise</h2>
+        <div class="price">Custom</div>
+        <p>For teams and organizations</p>
+        <ul class="features">
+          <li>Everything in Pro</li>
+          <li>Team dashboard</li>
+          <li>Advanced analytics</li>
+          <li>SSO integration</li>
+          <li>On-premise deployment</li>
+          <li>24/7 support</li>
+        </ul>
+        <button class="btn btn-secondary">Contact Sales</button>
+      </div>
+
+    </div>
+
+ 
+    <div class="testimonials">
+      <h3>What Developers Say</h3>
+      <div class="testimonial-grid">
+        <div class="testimonial">
+          <p>"CodeFlow Pro completely transformed my productivity!"</p>
+          <div class="author">— Rumesh</div>
         </div>
-        <div class="pricing-cards">
-          <div class="card">
-  <h2>Free</h2>
-  <div class="price">$0 <span>/ month</span></div>
-  <p>Perfect for getting started</p>
-  <ul class="features">
-    <li>Basic productivity tracking</li>
-    <li>7-day activity history</li>
-    <li>Simple visualizations</li>
-    <li>Basic achievements</li>
-    <li>Email support</li>
-  </ul>
-</div>
-<div class="card featured">
-  <span class="badge">Most Popular</span>
-  <h2>Pro</h2>
-  <div class="price">$9.99 <span>/ month</span></div>
-  <p>For serious developers</p>
-  <ul class="features">
-    <li>Advanced AI insights</li>
-    <li>Unlimited activity history</li>
-    <li>Advanced analytics & charts</li>
-    <li>Custom goals & reminders</li>
-    <li>Team collaboration</li>
-  </ul>
-</div>
-<div class="card">
-  <h2>Enterprise</h2>
-  <div class="price">Custom</div>
-  <p>For teams and organizations</p>
-  <ul class="features">
-    <li>Everything in Pro</li>
-    <li>Team dashboard</li>
-    <li>Advanced analytics</li>
-    <li>SSO integration</li>
-    <li>On-premise deployment</li>
-  </ul>
-  <button class="btn btn-secondary">Contact Sales</button>
-</div>
-<div class="testimonials">
-  <h3>What Developers Say</h3>
-  <div class="testimonial-grid">
-    <div class="testimonial">
-      <p>"CodeFlow Pro transformed my productivity!"</p>
-      <div class="author">— Rumesh</div>
-    </div>
-    <div class="testimonial">
-      <p>"Amazing analytics helped optimize my workflow."</p>
-      <div class="author">— Viveharan</div>
-    </div>
-  </div>
-</div>
-<div class="faq">
-  <h3>Frequently Asked Questions</h3>
-
-  <div class="faq-item">
-    <h4>Can I cancel anytime?</h4>
-    <p>You can cancel anytime.</p>
-  </div>
-
-  <div class="faq-item">
-    <h4>Do you offer a trial?</h4>
-    <p>Yes, 14-day Pro trial included.</p>
-  </div>
-</div>
-
+        <div class="testimonial">
+          <p>"Amazing analytics that helped optimize my workflow."</p>
+          <div class="author">— Viveharan</div>
         </div>
+        <div class="testimonial">
+          <p>"Team features make collaboration seamless and fun."</p>
+          <div class="author">— Sewmini</div>
+        </div>
+      </div>
     </div>
-  </body>
+
+
+    <div class="faq">
+      <h3>Frequently Asked Questions</h3>
+
+      <div class="faq-item">
+        <h4>Can I cancel anytime?</h4>
+        <p>You can cancel anytime. Features remain active until billing cycle ends.</p>
+      </div>
+
+      <div class="faq-item">
+        <h4>Do you accept PayPal?</h4>
+        <p>Yes, all major cards and PayPal supported.</p>
+      </div>
+
+      <div class="faq-item">
+        <h4>Do you offer a trial?</h4>
+        <p>Yes — enjoy a 14-day Pro trial.</p>
+      </div>
+    </div>
+
+  </div>
+
+
+  <script>
+   
+    function upgradeToPro() {
+      alert("Redirecting to checkout...");
+    }
+  </script>
+
+</body>
+
 </html>
