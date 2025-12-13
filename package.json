@@ -3,6 +3,7 @@
   "displayName": "CodeFlow AI",
   "description": "AI-powered VS Code extension that tracks coding habits and provides productivity insights.",
   "version": "0.0.1",
+  "icon": "./icon/2.png",
   "engines": {
     "vscode": "^1.102.0"
   },
