@@ -4,6 +4,229 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CodeFlow Pro</title>
+    <style>
+    /* Commit 11 */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background: white;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      color: #333;
+    }
+
+    .container {
+      max-width: 1200px;
+      width: 100%;
+
+      /* Commit 12: Page fade-in animation */
+      animation: fadeIn 0.6s ease-in;
+    }
+
+    /* Commit 12 */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Commit 3: Header section */
+    .header {
+      text-align: center;
+      color: #2563eb;
+      margin-bottom: 50px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .logo {
+      width: 80px;
+      height: 80px;
+      margin-bottom: 20px;
+    }
+
+    .header h1 {
+      font-size: 3.5rem;
+      margin-bottom: 15px;
+    }
+
+    .header p {
+      font-size: 1.5rem;
+      color: #666;
+    }
+
+    /* Commit 4: Pricing card layout */
+    .pricing-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 30px;
+      margin-bottom: 50px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 20px 60px rgba(68, 68, 68, 0.3);
+      transition: 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Commit 8: Card hover animation */
+    .card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 30px 80px rgba(66, 66, 66, 0.4);
+    }
+
+    .featured {
+      border: 3px solid #2563eb;
+      transform: scale(1.05);
+    }
+
+    .badge {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: #2563eb;
+      color: white;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+
+    .card h2 {
+      font-size: 2rem;
+      margin-bottom: 15px;
+      color: #2563eb;
+    }
+
+    .price {
+      font-size: 3rem;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    .price span {
+      font-size: 1.2rem;
+      color: #666;
+    }
+
+    .card p {
+      color: #666;
+      margin-bottom: 25px;
+      font-size: 1.1rem;
+    }
+
+    .features {
+      list-style: none;
+      margin-bottom: 30px;
+    }
+
+    .features li {
+      padding: 12px 0;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      align-items: center;
+      font-size: 1rem;
+      color: #555;
+    }
+
+    .features li::before {
+      content: "✓";
+      color: #2563eb;
+      font-size: 1.3rem;
+      margin-right: 10px;
+    }
+
+    /* Commit 13: Buttons */
+    .btn {
+      width: 100%;
+      padding: 18px;
+      border: none;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .btn-primary {
+      background: #2563eb;
+      color: white;
+      box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+    }
+
+    .btn-secondary {
+      background: white;
+      border: 2px solid #2563eb;
+      color: #2563eb;
+    }
+
+    /* Commit 9: Testimonials */
+    .testimonials {
+      background: #f8fafc;
+      border-radius: 20px;
+      padding: 40px;
+      margin-top: 50px;
+    }
+
+    .testimonial-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 25px;
+    }
+
+    .testimonial {
+      background: white;
+      padding: 25px;
+      border-radius: 15px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .testimonial p {
+      font-style: italic;
+      color: #666;
+    }
+
+    .author {
+      margin-top: 10px;
+      font-weight: bold;
+      color: #2563eb;
+    }
+
+    /* Commit 10: FAQ Section */
+    .faq {
+      background: white;
+      padding: 40px;
+      border-radius: 20px;
+      margin-top: 30px;
+    }
+
+    .faq-item {
+      margin-bottom: 25px;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 20px;
+    }
+  </style>
   </head>
   <body>
     <div class="container">
