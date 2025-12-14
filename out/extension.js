@@ -372,4 +372,5 @@ function deactivate() {
         backendServicesModuleInstance.stopLocalServer();
     }
 }
+// 
 //# sourceMappingURL=extension.js.map

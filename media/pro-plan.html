@@ -1,355 +1,394 @@
-
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="../icon/2.png" />
+    <title>CodeFlow AI Pro Plan</title>
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CodeFlow Pro - Unlock Your Full Potential</title>
-
- 
-  <style>
-   
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-      background: white;
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 20px;
-      color: #333;
-    }
-
-    .container {
-      max-width: 1200px;
-      width: 100%;
-
-      animation: fadeIn 0.6s ease-in;
-    }
-
-  
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(30px);
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
       }
 
-      to {
-        opacity: 1;
-        transform: translateY(0);
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: white;
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+        color: #333;
       }
-    }
 
-  
-    .header {
-      text-align: center;
-      color: #2563eb;
-      margin-bottom: 50px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
+      .container {
+        max-width: 1200px;
+        width: 100%;
 
-    .logo {
-      width: 80px;
-      height: 80px;
-      margin-bottom: 20px;
-    }
+        animation: fadeIn 0.6s ease-in;
+      }
 
-    .header h1 {
-      font-size: 3.5rem;
-      margin-bottom: 15px;
-    }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(30px);
+        }
 
-    .header p {
-      font-size: 1.5rem;
-      color: #666;
-    }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
 
-   
-    .pricing-cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      gap: 30px;
-      margin-bottom: 50px;
-    }
+      .header {
+        text-align: center;
+        color: #2563eb;
+        margin-bottom: 50px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
 
-    .card {
-      background: white;
-      border-radius: 20px;
-      padding: 40px;
-      box-shadow: 0 20px 60px rgba(68, 68, 68, 0.3);
-      transition: 0.3s ease;
-      position: relative;
-      overflow: hidden;
-    }
+      .logo {
+        width: 80px;
+        height: 80px;
+        margin-bottom: 20px;
+        border: 0.5px solid #0066cc;
+        border-radius: 15px;
+      }
 
-    
-    .card:hover {
-      transform: translateY(-10px);
-      box-shadow: 0 30px 80px rgba(66, 66, 66, 0.4);
-    }
+      .header h1 {
+        font-size: 3.5rem;
+        margin-bottom: 15px;
+      }
 
-    .featured {
-      border: 3px solid #2563eb;
-      transform: scale(1.05);
-    }
+      .header p {
+        font-size: 1.5rem;
+        color: #666;
+      }
 
-    .badge {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      background: #2563eb;
-      color: white;
-      padding: 8px 16px;
-      border-radius: 20px;
-      font-size: 0.85rem;
-      font-weight: bold;
-      text-transform: uppercase;
-    }
+      .pricing-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 30px;
+        margin-bottom: 50px;
+      }
 
-    .card h2 {
-      font-size: 2rem;
-      margin-bottom: 15px;
-      color: #2563eb;
-    }
+      .card {
+        background: white;
+        border-radius: 20px;
+        padding: 40px;
+        box-shadow: 0 20px 60px rgba(68, 68, 68, 0.3);
+        transition: 0.3s ease;
+        position: relative;
+        overflow: hidden;
+      }
 
-    .price {
-      font-size: 3rem;
-      font-weight: bold;
-      margin-bottom: 10px;
-    }
+      .card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 30px 80px rgba(66, 66, 66, 0.4);
+      }
 
-    .price span {
-      font-size: 1.2rem;
-      color: #666;
-    }
+      .featured {
+        border: 3px solid #2563eb;
+        transform: scale(1.05);
+      }
 
-    .card p {
-      color: #666;
-      margin-bottom: 25px;
-      font-size: 1.1rem;
-    }
+      .badge {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background: #2563eb;
+        color: white;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: bold;
+        text-transform: uppercase;
+      }
 
-    .features {
-      list-style: none;
-      margin-bottom: 30px;
-    }
+      .card h2 {
+        font-size: 2rem;
+        margin-bottom: 15px;
+        color: #2563eb;
+      }
 
-    .features li {
-      padding: 12px 0;
-      border-bottom: 1px solid #eee;
-      display: flex;
-      align-items: center;
-      font-size: 1rem;
-      color: #555;
-    }
+      .price {
+        font-size: 3rem;
+        font-weight: bold;
+        margin-bottom: 10px;
+      }
 
-    .features li::before {
-      content: "✓";
-      color: #2563eb;
-      font-size: 1.3rem;
-      margin-right: 10px;
-    }
+      .price span {
+        font-size: 1.2rem;
+        color: #666;
+      }
 
-    /* Commit 13: Buttons */
-    .btn {
-      width: 100%;
-      padding: 18px;
-      border: none;
-      border-radius: 12px;
-      font-size: 1.1rem;
-      font-weight: bold;
-      cursor: pointer;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
+      .card p {
+        color: #666;
+        margin-bottom: 25px;
+        font-size: 1.1rem;
+      }
 
-    .btn-primary {
-      background: #2563eb;
-      color: white;
-      box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
-    }
+      .features {
+        list-style: none;
+        margin-bottom: 30px;
+      }
 
-    .btn-secondary {
-      background: white;
-      border: 2px solid #2563eb;
-      color: #2563eb;
-    }
+      .features li {
+        padding: 12px 0;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        align-items: center;
+        font-size: 1rem;
+        color: #555;
+      }
 
-    .testimonials {
-      background: #f8fafc;
-      border-radius: 20px;
-      padding: 40px;
-      margin-top: 50px;
-    }
+      .features li::before {
+        content: "✓";
+        color: #2563eb;
+        font-size: 1.3rem;
+        margin-right: 10px;
+      }
 
-    .testimonial-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 25px;
-    }
+      /* Commit 13: Buttons */
+      .btn {
+        width: 100%;
+        padding: 18px;
+        border: none;
+        border-radius: 12px;
+        font-size: 1.1rem;
+        font-weight: bold;
+        cursor: pointer;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        transition: all 0.3s ease;
+      }
 
-    .testimonial {
-      background: white;
-      padding: 25px;
-      border-radius: 15px;
-      border: 1px solid #e2e8f0;
-    }
+      .btn-primary {
+        background: #2563eb;
+        color: white;
+        box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+      }
 
-    .testimonial p {
-      font-style: italic;
-      color: #666;
-    }
+      .btn-primary:hover {
+        background: #1d4ed8;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(37, 99, 235, 0.6);
+      }
 
-    .author {
-      margin-top: 10px;
-      font-weight: bold;
-      color: #2563eb;
-    }
+      .btn-secondary {
+        background: white;
+        border: 2px solid #2563eb;
+        color: #2563eb;
+      }
 
-   
-    .faq {
-      background: white;
-      padding: 40px;
-      border-radius: 20px;
-      margin-top: 30px;
-    }
+      .btn-secondary:hover {
+        background: #2563eb;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+      }
 
-    .faq-item {
-      margin-bottom: 25px;
-      border-bottom: 1px solid #eee;
-      padding-bottom: 20px;
-    }
-  </style>
-</head>
+      .testimonials {
+        background: #f8fafc;
+        border-radius: 20px;
+        padding: 40px;
+        margin-top: 50px;
+      }
 
-<body>
+      .testimonial-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 25px;
+      }
 
-  <div class="container">
+      .testimonial {
+        background: white;
+        padding: 25px;
+        border-radius: 15px;
+        border: 1px solid #e2e8f0;
+      }
 
-   
-    <div class="header">
-      <div style="display: flex; align-items: center; gap: 15px">
-        <img src="../icon/2.png" alt="" class="logo" />
-        <h1>CodeFlow <span style="
+      .testimonial p {
+        font-style: italic;
+        color: #666;
+      }
+
+      .author {
+        margin-top: 10px;
+        font-weight: bold;
+        color: #2563eb;
+      }
+
+      .faq {
+        background: white;
+        padding: 40px;
+        border-radius: 20px;
+        margin-top: 30px;
+      }
+
+      .faq-item {
+        margin-bottom: 25px;
+        border-bottom: 1px solid #eee;
+        padding: 25px;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+      }
+
+      .faq-item:hover {
+        background: #f8fafc;
+        border-bottom: 1px solid #2563eb;
+        transform: translateX(5px);
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.1);
+      }
+
+      .faq-item h4 {
+        color: #2563eb;
+        font-size: 1.2rem;
+        margin-bottom: 12px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+      }
+
+      .faq-item h4::before {
+        content: "Q:";
+        background: #2563eb;
+        color: white;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        margin-right: 12px;
+        font-weight: bold;
+      }
+
+      .faq-item p {
+        color: #555;
+        line-height: 1.6;
+        font-size: 1rem;
+        padding-left: 45px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="header">
+        <div style="display: flex; align-items: center; gap: 15px">
+          <img src="../icon/2.png" alt="" class="logo" />
+          <h1>
+            CodeFlow
+            <span
+              style="
                 background: #2563eb;
                 color: white;
                 padding: 2px 20px;
-                border-radius: 12px;">Pro</span></h1>
-      </div>
-      <p>Supercharge your productivity with advanced features</p>
-    </div>
-
-    
-    <div class="pricing-cards">
-
-   
-      <div class="card">
-        <h2>Free</h2>
-        <div class="price">$0 <span>/ month</span></div>
-        <p>Perfect for getting started</p>
-        <ul class="features">
-          <li>Basic productivity tracking</li>
-          <li>7-day activity history</li>
-          <li>Simple visualizations</li>
-          <li>Basic achievements</li>
-          <li>Email support</li>
-        </ul>
-        <button class="btn btn-secondary">Current Plan</button>
-      </div>
-
-    
-      <div class="card featured">
-        <span class="badge">Most Popular</span>
-        <h2>Pro</h2>
-        <div class="price">$9.99 <span>/ month</span></div>
-        <p>For serious developers</p>
-        <ul class="features">
-          <li>Advanced AI insights</li>
-          <li>Unlimited activity history</li>
-          <li>Advanced analytics & charts</li>
-          <li>Custom goals & reminders</li>
-          <li>Team collaboration</li>
-          <li>Cloud sync</li>
-        </ul>
-        <button class="btn btn-primary">Upgrade to Pro</button>
-      </div>
-
-      
-      <div class="card">
-        <h2>Enterprise</h2>
-        <div class="price">Custom</div>
-        <p>For teams and organizations</p>
-        <ul class="features">
-          <li>Everything in Pro</li>
-          <li>Team dashboard</li>
-          <li>Advanced analytics</li>
-          <li>SSO integration</li>
-          <li>On-premise deployment</li>
-          <li>24/7 support</li>
-        </ul>
-        <button class="btn btn-secondary">Contact Sales</button>
-      </div>
-
-    </div>
-
- 
-    <div class="testimonials">
-      <h3>What Developers Say</h3>
-      <div class="testimonial-grid">
-        <div class="testimonial">
-          <p>"CodeFlow Pro completely transformed my productivity!"</p>
-          <div class="author">— Rumesh kumara</div>
+                border-radius: 15px;
+              "
+              >Pro</span
+            >
+          </h1>
         </div>
-        <div class="testimonial">
-          <p>"Amazing analytics that helped optimize my workflow."</p>
-          <div class="author">— Viveharan</div>
+        <p>Supercharge your productivity with advanced features</p>
+      </div>
+
+      <div class="pricing-cards">
+        <div class="card">
+          <h2>Free</h2>
+          <div class="price">$0 <span>/ month</span></div>
+          <p>Perfect for getting started</p>
+          <ul class="features">
+            <li>Basic productivity tracking</li>
+            <li>7-day activity history</li>
+            <li>Simple visualizations</li>
+            <li>Basic achievements</li>
+            <li>Email support</li>
+          </ul>
+          <button class="btn btn-secondary">Current Plan</button>
         </div>
-        <div class="testimonial">
-          <p>"Team features make collaboration seamless and fun."</p>
-          <div class="author">— Sewmini</div>
+
+        <div class="card featured">
+          <span class="badge">Most Popular</span>
+          <h2>Pro</h2>
+          <div class="price">$9.99 <span>/ month</span></div>
+          <p>For serious developers</p>
+          <ul class="features">
+            <li>Advanced AI insights</li>
+            <li>Unlimited activity history</li>
+            <li>Advanced analytics & charts</li>
+            <li>Custom goals & reminders</li>
+            <li>Team collaboration</li>
+            <li>Cloud sync</li>
+          </ul>
+          <button class="btn btn-primary">Upgrade to Pro</button>
+        </div>
+
+        <div class="card">
+          <h2>Enterprise</h2>
+          <div class="price">Custom</div>
+          <p>For teams and organizations</p>
+          <ul class="features">
+            <li>Everything in Pro</li>
+            <li>Team dashboard</li>
+            <li>Advanced analytics</li>
+            <li>SSO integration</li>
+            <li>On-premise deployment</li>
+            <li>24/7 support</li>
+          </ul>
+          <button class="btn btn-secondary">Contact Sales</button>
         </div>
       </div>
+
+      <div class="testimonials">
+        <h3 style="margin-bottom: 15px">What Developers Say</h3>
+        <div class="testimonial-grid">
+          <div class="testimonial">
+            <p>"CodeFlow Pro completely transformed my productivity!"</p>
+            <div class="author">— Rumesh</div>
+          </div>
+          <div class="testimonial">
+            <p>"Amazing analytics that helped optimize my workflow."</p>
+            <div class="author">— Viveharan</div>
+          </div>
+          <div class="testimonial">
+            <p>"Team features make collaboration seamless and fun."</p>
+            <div class="author">— Sewmini</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="faq">
+        <h3 style="margin-bottom: 25px">Frequently Asked Questions</h3>
+
+        <div class="faq-item">
+          <h4>Can I cancel anytime?</h4>
+          <p>
+            You can cancel anytime. Features remain active until billing cycle
+            ends.
+          </p>
+        </div>
+
+        <div class="faq-item">
+          <h4>Do you accept PayPal?</h4>
+          <p>Yes, all major cards and PayPal supported.</p>
+        </div>
+
+        <div class="faq-item">
+          <h4>Do you offer a trial?</h4>
+          <p>Yes — enjoy a 14-day Pro trial.</p>
+        </div>
+      </div>
     </div>
 
-
-    <div class="faq">
-      <h3>Frequently Asked Questions</h3>
-
-      <div class="faq-item">
-        <h4>Can I cancel anytime?</h4>
-        <p>You can cancel anytime. Features remain active until billing cycle ends.</p>
-      </div>
-
-      <div class="faq-item">
-        <h4>Do you accept PayPal?</h4>
-        <p>Yes, all major cards and PayPal supported.</p>
-      </div>
-
-      <div class="faq-item">
-        <h4>Do you offer a trial?</h4>
-        <p>Yes — enjoy a 14-day Pro trial.</p>
-      </div>
-    </div>
-
-  </div>
-
-
-  <script>
-   
-    function upgradeToPro() {
-      alert("Redirecting to checkout...");
-    }
-  </script>
-
-</body>
-
+    <script>
+      function upgradeToPro() {
+        alert("Redirecting to checkout...");
+      }
+    </script>
+  </body>
 </html>
