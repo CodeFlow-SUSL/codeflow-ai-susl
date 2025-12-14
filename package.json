@@ -2,9 +2,17 @@
   "name": "codeflow-ai",
   "displayName": "CodeFlow AI",
   "description": "AI-powered VS Code extension that tracks coding habits and provides productivity insights.",
-  "version": "0.0.2",
+  "version": "0.1.3",
   "publisher": "CodeFlowAI",
   "icon": "./icon/2.png",
+   "repository": {
+    "type": "git",
+    "url": "https://github.com/CodeFlow-SUSL/codeflow-ai-susl.git"
+  },
+  "bugs": {
+    "url": "https://github.com/CodeFlow-SUSL/codeflow-ai-susl/issues"
+  },
+  "homepage": "https://github.com/CodeFlow-SUSL/codeflow-ai-susl#readme",
   "engines": {
     "vscode": "^1.102.0"
   },
