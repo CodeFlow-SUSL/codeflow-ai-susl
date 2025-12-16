@@ -3,6 +3,10 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { spawn } from 'child_process';
 import { CodingActivity } from './dataCollector';
+import { GeminiService } from './geminiService';
+
+// Re-export for convenience
+export { CodingActivity };
 
 export interface ProductivityInsight {
     productivityScore: number;
@@ -41,9 +45,11 @@ export class AIAnalyzer {
     private apiEndpoint: string = '';
     private apiKey: string = '';
     private useTFModel: boolean = false;
+    private geminiService: GeminiService;
 
     constructor(context: vscode.ExtensionContext) {
         this.context = context;
+        this.geminiService = new GeminiService();
         
         // Check if external API is configured
         const config = vscode.workspace.getConfiguration('codeflow');
@@ -68,13 +74,41 @@ export class AIAnalyzer {
         }
 
         // Choose analysis method based on configuration
+        let insight: ProductivityInsight;
         if (this.useExternalAPI && this.apiEndpoint && this.apiKey) {
-            return this.analyzeWithExternalAPI(activities, days);
+            insight = await this.analyzeWithExternalAPI(activities, days);
         } else if (this.useTFModel) {
-            return this.analyzeWithTFModel(activities, days);
+            insight = await this.analyzeWithTFModel(activities, days);
         } else {
-            return this.performLocalAnalysis(activities, days);
+            insight = this.performLocalAnalysis(activities, days);
         }
+
+        // Generate AI-powered suggestions using Gemini if enabled
+        if (this.geminiService.isGeminiEnabled()) {
+            try {
+                const geminiInsights = await this.geminiService.generateInsights(insight, activities);
+                
+                // Combine all insights into suggestions array
+                insight.suggestions = [
+                    ...geminiInsights.codeImprovements.map(s => `💡 Code Improvement: ${s}`),
+                    ...geminiInsights.performanceTips.map(s => `⚡ Performance: ${s}`),
+                    ...geminiInsights.badPracticeWarnings.map(s => `⚠️ Warning: ${s}`),
+                    ...geminiInsights.refactoringIdeas.map(s => `🔧 Refactoring: ${s}`),
+                    ...geminiInsights.productivityHints.map(s => `🎯 Productivity: ${s}`)
+                ];
+            } catch (error) {
+                console.error('Error generating Gemini insights:', error);
+                // Keep existing suggestions or add basic ones
+                if (insight.suggestions.length === 0) {
+                    insight.suggestions = this.generateBasicSuggestions(insight);
+                }
+            }
+        } else if (insight.suggestions.length === 0) {
+            // Generate basic suggestions if no AI is enabled
+            insight.suggestions = this.generateBasicSuggestions(insight);
+        }
+
+        return insight;
     }
 
     private getActivitiesForDate(date: string): CodingActivity[] {
@@ -179,10 +213,18 @@ export class AIAnalyzer {
             
             // Update session data
             currentSession.lastActivity = activity.timestamp;
-            if (activity.keystrokes) currentSession.keystrokes += activity.keystrokes;
-            if (activity.command) currentSession.commands++;
-            if (activity.file) currentSession.files.add(activity.file);
-            if (activity.language) currentSession.languages.add(activity.language);
+            if (activity.keystrokes) {
+                currentSession.keystrokes += activity.keystrokes;
+            }
+            if (activity.command) {
+                currentSession.commands++;
+            }
+            if (activity.file) {
+                currentSession.files.add(activity.file);
+            }
+            if (activity.language) {
+                currentSession.languages.add(activity.language);
+            }
         }
         
         // Convert sessions to TF input format
@@ -481,7 +523,9 @@ export class AIAnalyzer {
         };
     }
     private calculateProductivityScore(activities: CodingActivity[]): number {
-        if (activities.length === 0) return 0;
+        if (activities.length === 0) {
+            return 0;
+        }
         
         // Calculate based on various factors
         let score = 50; // Base score
@@ -501,5 +545,49 @@ export class AIAnalyzer {
         score += fileFactor;
         
         return Math.round(Math.min(score, 100));
+    }
+
+    private generateBasicSuggestions(insight: ProductivityInsight): string[] {
+        const suggestions: string[] = [];
+
+        // Productivity score based suggestions
+        if (insight.productivityScore < 50) {
+            suggestions.push('💡 Code Improvement: Try to maintain consistent coding sessions to improve productivity.');
+        } else if (insight.productivityScore > 80) {
+            suggestions.push('🎯 Productivity: Excellent productivity! Keep maintaining your current coding habits.');
+        }
+
+        // Streak based suggestions
+        if (insight.streakDays === 0) {
+            suggestions.push('🎯 Productivity: Start a coding streak by committing to daily practice.');
+        } else if (insight.streakDays >= 7) {
+            suggestions.push(`🎯 Productivity: Amazing ${insight.streakDays}-day streak! Consistency is key to mastery.`);
+        }
+
+        // File switching suggestions
+        if (insight.fileSwitchCount > 50) {
+            suggestions.push('⚠️ Warning: High file switching detected. Consider focusing on one task at a time.');
+            suggestions.push('🔧 Refactoring: Group related functionality to reduce context switching.');
+        }
+
+        // Language diversity suggestions
+        if (insight.uniqueLanguages > 3) {
+            suggestions.push('💡 Code Improvement: Working with multiple languages? Ensure consistent coding standards across all.');
+        }
+
+        // Active hours suggestions
+        if (insight.activeHourRange.latest && insight.activeHourRange.earliest) {
+            const range = insight.activeHourRange.latest - insight.activeHourRange.earliest;
+            if (range > 12) {
+                suggestions.push('⚠️ Warning: Long coding hours detected. Remember to take regular breaks.');
+            }
+        }
+
+        // General suggestions
+        suggestions.push('⚡ Performance: Use keyboard shortcuts to speed up common operations.');
+        suggestions.push('💡 Code Improvement: Regularly review and refactor code to maintain quality.');
+        suggestions.push('🔧 Refactoring: Extract repeated patterns into reusable components.');
+
+        return suggestions;
     }
 }

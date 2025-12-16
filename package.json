@@ -5,7 +5,7 @@
   "version": "0.1.3",
   "publisher": "CodeFlowAI",
   "icon": "./icon/2.png",
-   "repository": {
+  "repository": {
     "type": "git",
     "url": "https://github.com/CodeFlow-SUSL/codeflow-ai-susl.git"
   },
@@ -47,6 +47,7 @@
     "typescript": "^5.8.3"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.21.0",
     "@tensorflow/tfjs": "^4.22.0",
     "@types/chart.js": "^2.9.41",
     "@types/react": "^18.2.45",
@@ -97,6 +98,16 @@
           "type": "string",
           "default": "",
           "description": "API key for external AI analysis"
+        },
+        "codeflow.useGeminiAI": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable Google Gemini AI for advanced code insights"
+        },
+        "codeflow.geminiApiKey": {
+          "type": "string",
+          "default": "",
+          "description": "Google Gemini API key for AI-powered insights"
         },
         "codeflow.useTFModel": {
           "type": "boolean",

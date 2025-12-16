@@ -1330,8 +1330,37 @@ class VisualizationPanel {
         return statsHtml + badgesHtml;
     }
     buildAiInsightsHtml(insight) {
-        // Categorize suggestions
-        const categorizedSuggestions = this.categorizeSuggestions(insight.suggestions);
+        // Categorize suggestions by type
+        const codeImprovements = [];
+        const performanceTips = [];
+        const warnings = [];
+        const refactoringIdeas = [];
+        const productivityHints = [];
+        // Sort suggestions into categories
+        if (insight.suggestions && insight.suggestions.length > 0) {
+            insight.suggestions.forEach(suggestion => {
+                const lower = suggestion.toLowerCase();
+                if (lower.includes('💡') || lower.includes('code improvement')) {
+                    codeImprovements.push(suggestion.replace(/💡\s*Code Improvement:\s*/i, ''));
+                }
+                else if (lower.includes('⚡') || lower.includes('performance')) {
+                    performanceTips.push(suggestion.replace(/⚡\s*Performance:\s*/i, ''));
+                }
+                else if (lower.includes('⚠️') || lower.includes('warning')) {
+                    warnings.push(suggestion.replace(/⚠️\s*Warning:\s*/i, ''));
+                }
+                else if (lower.includes('🔧') || lower.includes('refactoring')) {
+                    refactoringIdeas.push(suggestion.replace(/🔧\s*Refactoring:\s*/i, ''));
+                }
+                else if (lower.includes('🎯') || lower.includes('productivity')) {
+                    productivityHints.push(suggestion.replace(/🎯\s*Productivity:\s*/i, ''));
+                }
+                else {
+                    // Default to productivity hints
+                    productivityHints.push(suggestion);
+                }
+            });
+        }
         // Calculate productivity patterns
         const patterns = this.analyzeProductivityPatterns(insight);
         // Generate focus metrics
@@ -1340,14 +1369,6 @@ class VisualizationPanel {
         const workLifeBalance = this.analyzeWorkLifeBalance(insight);
         // Productivity trend indicator
         const trendIndicator = this.calculateTrendIndicator(insight);
-        const suggestionItems = (insight.suggestions && insight.suggestions.length > 0)
-            ? insight.suggestions.map((suggestion, index) => `
-                <li class="insight-item" data-category="${categorizedSuggestions[index] || 'general'}">
-                    <span class="insight-icon">${this.getInsightIcon(categorizedSuggestions[index])}</span>
-                    <span class="insight-text">${suggestion}</span>
-                </li>
-            `).join('')
-            : '<li class="insight-item"><span class="insight-icon">💡</span><span class="insight-text">Keep coding to unlock personalized AI suggestions.</span></li>';
         let tfHighlights = '';
         if (insight.tfInsights?.featureImportance) {
             const topFeatures = Object.entries(insight.tfInsights.featureImportance)
@@ -1385,7 +1406,7 @@ class VisualizationPanel {
                 <div class="insight-section trend-section">
                     <div class="section-header">
                         <h3>📊 Productivity Trend</h3>
-                        <span class="trend-badge ${trendIndicator.class}">${trendIndicator.icon} ${trendIndicator.text}</span>
+                <span class="trend-badge ${trendIndicator.class}">${trendIndicator.icon} ${trendIndicator.text}</span>
                     </div>
                     <p class="section-description">${trendIndicator.description}</p>
                 </div>
@@ -1467,14 +1488,130 @@ class VisualizationPanel {
                     </div>
                 </div>
 
-                <!-- AI Suggestions -->
-                <div class="insight-section suggestions-section">
+                <!-- AI-Powered Suggestions with Collapsible Categories -->
+                <div class="insight-section ai-suggestions-section">
                     <div class="section-header">
-                        <h3>💡 Personalized Recommendations</h3>
+                        <h3>🤖 AI-Powered Insights</h3>
+                        <span class="insights-count">${(codeImprovements.length + performanceTips.length + warnings.length + refactoringIdeas.length + productivityHints.length)} insights</span>
                     </div>
-                    <ul class="insight-list">
-                        ${suggestionItems}
-                    </ul>
+                    
+                    <!-- Code Improvements -->
+                    ${codeImprovements.length > 0 ? `
+                    <details class="insight-category code-improvements" open>
+                        <summary class="category-header">
+                            <span class="category-icon">💡</span>
+                            <span class="category-title">Code Improvements</span>
+                            <span class="category-count">${codeImprovements.length}</span>
+                            <span class="expand-icon">▼</span>
+                        </summary>
+                        <div class="category-content">
+                            <ul class="insight-list">
+                                ${codeImprovements.map((item, idx) => `
+                                    <li class="insight-item fade-in" style="animation-delay: ${idx * 0.1}s">
+                                        <span class="item-number">${idx + 1}</span>
+                                        <span class="item-text">${item}</span>
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        </div>
+                    </details>
+                    ` : ''}
+                    
+                    <!-- Performance Tips -->
+                    ${performanceTips.length > 0 ? `
+                    <details class="insight-category performance-tips" open>
+                        <summary class="category-header">
+                            <span class="category-icon">⚡</span>
+                            <span class="category-title">Performance Tips</span>
+                            <span class="category-count">${performanceTips.length}</span>
+                            <span class="expand-icon">▼</span>
+                        </summary>
+                        <div class="category-content">
+                            <ul class="insight-list">
+                                ${performanceTips.map((item, idx) => `
+                                    <li class="insight-item fade-in" style="animation-delay: ${idx * 0.1}s">
+                                        <span class="item-number">${idx + 1}</span>
+                                        <span class="item-text">${item}</span>
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        </div>
+                    </details>
+                    ` : ''}
+                    
+                    <!-- Warnings -->
+                    ${warnings.length > 0 ? `
+                    <details class="insight-category warnings" open>
+                        <summary class="category-header">
+                            <span class="category-icon">⚠️</span>
+                            <span class="category-title">Bad Practice Warnings</span>
+                            <span class="category-count">${warnings.length}</span>
+                            <span class="expand-icon">▼</span>
+                        </summary>
+                        <div class="category-content">
+                            <ul class="insight-list">
+                                ${warnings.map((item, idx) => `
+                                    <li class="insight-item fade-in" style="animation-delay: ${idx * 0.1}s">
+                                        <span class="item-number">${idx + 1}</span>
+                                        <span class="item-text">${item}</span>
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        </div>
+                    </details>
+                    ` : ''}
+                    
+                    <!-- Refactoring Ideas -->
+                    ${refactoringIdeas.length > 0 ? `
+                    <details class="insight-category refactoring" open>
+                        <summary class="category-header">
+                            <span class="category-icon">🔧</span>
+                            <span class="category-title">Refactoring Ideas</span>
+                            <span class="category-count">${refactoringIdeas.length}</span>
+                            <span class="expand-icon">▼</span>
+                        </summary>
+                        <div class="category-content">
+                            <ul class="insight-list">
+                                ${refactoringIdeas.map((item, idx) => `
+                                    <li class="insight-item fade-in" style="animation-delay: ${idx * 0.1}s">
+                                        <span class="item-number">${idx + 1}</span>
+                                        <span class="item-text">${item}</span>
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        </div>
+                    </details>
+                    ` : ''}
+                    
+                    <!-- Productivity Hints -->
+                    ${productivityHints.length > 0 ? `
+                    <details class="insight-category productivity" open>
+                        <summary class="category-header">
+                            <span class="category-icon">🎯</span>
+                            <span class="category-title">Productivity Hints</span>
+                            <span class="category-count">${productivityHints.length}</span>
+                            <span class="expand-icon">▼</span>
+                        </summary>
+                        <div class="category-content">
+                            <ul class="insight-list">
+                                ${productivityHints.map((item, idx) => `
+                                    <li class="insight-item fade-in" style="animation-delay: ${idx * 0.1}s">
+                                        <span class="item-number">${idx + 1}</span>
+                                        <span class="item-text">${item}</span>
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        </div>
+                    </details>
+                    ` : ''}
+                    
+                    ${(codeImprovements.length + performanceTips.length + warnings.length + refactoringIdeas.length + productivityHints.length) === 0 ? `
+                        <div class="no-insights">
+                            <span class="no-insights-icon">💡</span>
+                            <p>Keep coding to unlock personalized AI suggestions!</p>
+                            <small>Generate reports regularly to get actionable insights.</small>
+                        </div>
+                    ` : ''}
                 </div>
 
                 ${tfHighlights}
