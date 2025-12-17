@@ -62,8 +62,9 @@ class GeminiService {
         }
         try {
             this.genAI = new generative_ai_1.GoogleGenerativeAI(apiKey);
-            this.model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-            console.log('Gemini AI initialized successfully');
+            // Use the latest Gemini 2.5 Flash model
+            this.model = this.genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+            console.log('Gemini AI initialized successfully with model: gemini-2.5-flash');
         }
         catch (error) {
             const errorMessage = error?.message || 'Unknown error';
@@ -96,18 +97,21 @@ class GeminiService {
             const errorMessage = error?.message || 'Unknown error';
             console.error('Error generating Gemini insights:', errorMessage);
             console.error('Full error:', error);
-            // Show more specific error messages
-            if (errorMessage.includes('API key')) {
+            // Show more specific error messages based on error type
+            if (errorMessage.toLowerCase().includes('api key') || errorMessage.includes('401')) {
                 vscode.window.showErrorMessage('Invalid Gemini API key. Please check your settings.');
             }
-            else if (errorMessage.includes('quota') || errorMessage.includes('limit')) {
-                vscode.window.showErrorMessage('Gemini API quota exceeded. Using fallback suggestions.');
+            else if (errorMessage.toLowerCase().includes('quota') || errorMessage.toLowerCase().includes('exceeded') || errorMessage.includes('429')) {
+                vscode.window.showWarningMessage('Gemini API quota or rate limit exceeded. Using fallback suggestions. Try again later.');
             }
-            else if (errorMessage.includes('network') || errorMessage.includes('fetch')) {
-                vscode.window.showErrorMessage('Network error connecting to Gemini API. Using fallback suggestions.');
+            else if (errorMessage.toLowerCase().includes('network') || errorMessage.toLowerCase().includes('fetch') || errorMessage.toLowerCase().includes('econnrefused') || errorMessage.toLowerCase().includes('timeout')) {
+                vscode.window.showWarningMessage('Network error connecting to Gemini API. Check your internet connection. Using fallback suggestions.');
+            }
+            else if (errorMessage.includes('404') || errorMessage.toLowerCase().includes('not found')) {
+                vscode.window.showErrorMessage('Gemini model not found. The API may have been updated. Using fallback suggestions.');
             }
             else {
-                vscode.window.showWarningMessage(`Failed to generate AI insights: ${errorMessage}`);
+                vscode.window.showWarningMessage(`Failed to generate AI insights: ${errorMessage}. Using fallback suggestions.`);
             }
             return this.getFallbackInsights(insight);
         }
@@ -199,7 +203,7 @@ Keep each item concise (1-2 sentences) and actionable.
             throw new Error('Gemini model not initialized');
         }
         try {
-            console.log('Sending request to Gemini API...');
+            console.log('Sending request to Gemini API (model: gemini-2.5-flash)...');
             const result = await this.model.generateContent(context);
             const response = await result.response;
             const text = response.text();

@@ -522,6 +522,13 @@ export class VisualizationPanel {
         if (refreshBtn) refreshBtn.addEventListener('click', refreshDashboard);
         if (exportBtn) exportBtn.addEventListener('click', exportReport);
         if (upgradeBtn) upgradeBtn.addEventListener('click', requestUpgrade);
+        
+        // Event delegation for delete buttons
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.delete-btn')) {
+                deleteSuggestion(e.target.closest('.delete-btn'));
+            }
+        });
     });
 
     function showExportModal() {
@@ -1019,6 +1026,67 @@ export class VisualizationPanel {
         link.download = 'codeflow-ai-insights-' + new Date().toISOString().split('T')[0] + '.json';
         link.click();
         URL.revokeObjectURL(url);
+    }
+
+    function deleteSuggestion(button) {
+        // Get the list item
+        const listItem = button.closest('.insight-item');
+        const suggestionText = listItem.getAttribute('data-suggestion');
+        
+        // Add fade-out animation
+        listItem.style.opacity = '0';
+        listItem.style.transform = 'translateX(20px)';
+        listItem.style.transition = 'all 0.3s ease';
+        
+        // Remove from DOM after animation
+        setTimeout(() => {
+            const category = listItem.closest('.insight-category');
+            const categoryCount = category.querySelector('.category-count');
+            const insightsList = listItem.closest('.insight-list');
+            
+            // Remove the item
+            listItem.remove();
+            
+            // Update the count
+            const remainingItems = insightsList.querySelectorAll('.insight-item').length;
+            categoryCount.textContent = remainingItems;
+            
+            // Update overall insights count
+            const allCategories = document.querySelectorAll('.insight-category');
+            let totalCount = 0;
+            allCategories.forEach(cat => {
+                const count = parseInt(cat.querySelector('.category-count').textContent);
+                totalCount += count;
+            });
+            const insightsCount = document.querySelector('.insights-count');
+            if (insightsCount) {
+                insightsCount.textContent = totalCount + ' insight' + (totalCount === 1 ? '' : 's');
+            }
+            
+            // If no items left in category, hide the category
+            if (remainingItems === 0) {
+                category.style.display = 'none';
+            }
+            
+            // Update item numbers
+            const items = insightsList.querySelectorAll('.insight-item');
+            items.forEach((item, index) => {
+                const itemNumber = item.querySelector('.item-number');
+                if (itemNumber) {
+                    itemNumber.textContent = index + 1;
+                }
+            });
+            
+            // Show success notification (temporary deletion - will reappear on next report generation)
+            const notification = document.createElement('div');
+            notification.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #10b981; color: white; padding: 12px 20px; border-radius: 8px; z-index: 10000; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); animation: slideInRight 0.3s ease;';
+            notification.innerHTML = '<div style="display: flex; align-items: center; gap: 10px;"><span>\u2713</span><span>Suggestion hidden (temporary)</span></div>';
+            document.body.appendChild(notification);
+            setTimeout(() => {
+                notification.style.animation = 'slideOutRight 0.3s ease';
+                setTimeout(() => notification.remove(), 300);
+            }, 2000);
+        }, 300);
     }
 
     </script>
@@ -1524,9 +1592,14 @@ export class VisualizationPanel {
                         <div class="category-content">
                             <ul class="insight-list">
                                 ${codeImprovements.map((item, idx) => `
-                                    <li class="insight-item fade-in" style="animation-delay: ${idx * 0.1}s">
+                                    <li class="insight-item fade-in" style="animation-delay: ${idx * 0.1}s" data-suggestion="${item.replace(/"/g, '&quot;')}">
                                         <span class="item-number">${idx + 1}</span>
                                         <span class="item-text">${item}</span>
+                                        <button class="delete-btn" title="Delete this suggestion">
+                                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M14 1.41L12.59 0L7 5.59L1.41 0L0 1.41L5.59 7L0 12.59L1.41 14L7 8.41L12.59 14L14 12.59L8.41 7L14 1.41Z" fill="currentColor"/>
+                                            </svg>
+                                        </button>
                                     </li>
                                 `).join('')}
                             </ul>
@@ -1546,9 +1619,14 @@ export class VisualizationPanel {
                         <div class="category-content">
                             <ul class="insight-list">
                                 ${performanceTips.map((item, idx) => `
-                                    <li class="insight-item fade-in" style="animation-delay: ${idx * 0.1}s">
+                                    <li class="insight-item fade-in" style="animation-delay: ${idx * 0.1}s" data-suggestion="${item.replace(/"/g, '&quot;')}">
                                         <span class="item-number">${idx + 1}</span>
                                         <span class="item-text">${item}</span>
+                                        <button class="delete-btn" title="Delete this suggestion">
+                                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M14 1.41L12.59 0L7 5.59L1.41 0L0 1.41L5.59 7L0 12.59L1.41 14L7 8.41L12.59 14L14 12.59L8.41 7L14 1.41Z" fill="currentColor"/>
+                                            </svg>
+                                        </button>
                                     </li>
                                 `).join('')}
                             </ul>
@@ -1568,9 +1646,14 @@ export class VisualizationPanel {
                         <div class="category-content">
                             <ul class="insight-list">
                                 ${warnings.map((item, idx) => `
-                                    <li class="insight-item fade-in" style="animation-delay: ${idx * 0.1}s">
+                                    <li class="insight-item fade-in" style="animation-delay: ${idx * 0.1}s" data-suggestion="${item.replace(/"/g, '&quot;')}">
                                         <span class="item-number">${idx + 1}</span>
                                         <span class="item-text">${item}</span>
+                                        <button class="delete-btn" title="Delete this suggestion">
+                                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M14 1.41L12.59 0L7 5.59L1.41 0L0 1.41L5.59 7L0 12.59L1.41 14L7 8.41L12.59 14L14 12.59L8.41 7L14 1.41Z" fill="currentColor"/>
+                                            </svg>
+                                        </button>
                                     </li>
                                 `).join('')}
                             </ul>
@@ -1590,9 +1673,14 @@ export class VisualizationPanel {
                         <div class="category-content">
                             <ul class="insight-list">
                                 ${refactoringIdeas.map((item, idx) => `
-                                    <li class="insight-item fade-in" style="animation-delay: ${idx * 0.1}s">
+                                    <li class="insight-item fade-in" style="animation-delay: ${idx * 0.1}s" data-suggestion="${item.replace(/"/g, '&quot;')}">
                                         <span class="item-number">${idx + 1}</span>
                                         <span class="item-text">${item}</span>
+                                        <button class="delete-btn" title="Delete this suggestion">
+                                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M14 1.41L12.59 0L7 5.59L1.41 0L0 1.41L5.59 7L0 12.59L1.41 14L7 8.41L12.59 14L14 12.59L8.41 7L14 1.41Z" fill="currentColor"/>
+                                            </svg>
+                                        </button>
                                     </li>
                                 `).join('')}
                             </ul>
@@ -1612,9 +1700,14 @@ export class VisualizationPanel {
                         <div class="category-content">
                             <ul class="insight-list">
                                 ${productivityHints.map((item, idx) => `
-                                    <li class="insight-item fade-in" style="animation-delay: ${idx * 0.1}s">
+                                    <li class="insight-item fade-in" style="animation-delay: ${idx * 0.1}s" data-suggestion="${item.replace(/"/g, '&quot;')}">
                                         <span class="item-number">${idx + 1}</span>
                                         <span class="item-text">${item}</span>
+                                        <button class="delete-btn" title="Delete this suggestion">
+                                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M14 1.41L12.59 0L7 5.59L1.41 0L0 1.41L5.59 7L0 12.59L1.41 14L7 8.41L12.59 14L14 12.59L8.41 7L14 1.41Z" fill="currentColor"/>
+                                            </svg>
+                                        </button>
                                     </li>
                                 `).join('')}
                             </ul>
