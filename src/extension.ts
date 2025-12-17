@@ -146,6 +146,45 @@ export function activate(context: vscode.ExtensionContext) {
         }
     });
 
+    const upgradeToProCommand = vscode.commands.registerCommand('codeflow.upgradeToPro', async () => {
+        try {
+            // Create a new webview panel to display the Pro Plan page
+            const panel = vscode.window.createWebviewPanel(
+                'codeflowProPlan',
+                'CodeFlow Pro Plan',
+                vscode.ViewColumn.One,
+                {
+                    enableScripts: true,
+                    localResourceRoots: [
+                        vscode.Uri.joinPath(context.extensionUri, 'media'),
+                        vscode.Uri.joinPath(context.extensionUri, 'icon')
+                    ]
+                }
+            );
+
+            // Set the panel icon
+            panel.iconPath = vscode.Uri.joinPath(context.extensionUri, 'icon', '2.png');
+
+            // Read the pro-plan.html file
+            const fs = require('fs');
+            const proPlanPath = path.join(context.extensionPath, 'media', 'pro-plan.html');
+            let htmlContent = fs.readFileSync(proPlanPath, 'utf8');
+
+            // Update resource URIs to work in the webview
+            const logoUri = panel.webview.asWebviewUri(
+                vscode.Uri.joinPath(context.extensionUri, 'icon', '2.png')
+            );
+
+            // Replace relative paths with webview URIs
+            htmlContent = htmlContent.replace(/src="\.\.\/icon\/2\.png"/g, `src="${logoUri}"`);
+
+            panel.webview.html = htmlContent;
+        } catch (error) {
+            console.error('Error opening Pro Plan:', error);
+            vscode.window.showErrorMessage(`Error opening Pro Plan: ${error}`);
+        }
+    });
+
     // Register status bar item (CodeFlow icon)
     const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
     statusBarItem.text = '$(rocket) CodeFlow';
@@ -188,6 +227,7 @@ export function activate(context: vscode.ExtensionContext) {
         showReportCommand,
         trainTFModelCommand,
         testGeminiCommand,
+        upgradeToProCommand,
         statusBarItem,
         configWatcher
     );
