@@ -186,6 +186,50 @@ function activate(context) {
             vscode.window.showErrorMessage(`Error opening Pro Plan: ${error}`);
         }
     });
+    const resetExtensionCommand = vscode.commands.registerCommand('codeflow.resetExtension', async () => {
+        const choice = await vscode.window.showWarningMessage('This will reset CodeFlow to a fresh state, deleting all tracked data, badges, and settings. This cannot be undone. Continue?', { modal: true }, 'Reset Extension', 'Cancel');
+        if (choice !== 'Reset Extension') {
+            return;
+        }
+        try {
+            await vscode.window.withProgress({
+                location: vscode.ProgressLocation.Notification,
+                title: "Resetting CodeFlow Extension",
+                cancellable: false
+            }, async (progress) => {
+                progress.report({ message: "Clearing stored data..." });
+                // Clear all globalState keys
+                const keys = context.globalState.keys();
+                for (const key of keys) {
+                    await context.globalState.update(key, undefined);
+                }
+                // Clear globalStorage directory
+                const fs = require('fs');
+                const storagePath = context.globalStorageUri.fsPath;
+                if (fs.existsSync(storagePath)) {
+                    const files = fs.readdirSync(storagePath);
+                    for (const file of files) {
+                        const filePath = path.join(storagePath, file);
+                        try {
+                            fs.unlinkSync(filePath);
+                        }
+                        catch (err) {
+                            console.error(`Error deleting file ${filePath}:`, err);
+                        }
+                    }
+                }
+                progress.report({ message: "Reset complete!" });
+            });
+            const reload = await vscode.window.showInformationMessage('CodeFlow has been reset successfully. Reload VS Code to complete the reset.', 'Reload Now', 'Later');
+            if (reload === 'Reload Now') {
+                await vscode.commands.executeCommand('workbench.action.reloadWindow');
+            }
+        }
+        catch (error) {
+            console.error('Error resetting extension:', error);
+            vscode.window.showErrorMessage(`Error resetting extension: ${error}`);
+        }
+    });
     // Register status bar item (CodeFlow icon)
     const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
     statusBarItem.text = '$(rocket) CodeFlow';
@@ -218,7 +262,7 @@ function activate(context) {
         }
     });
     // Add to subscriptions
-    context.subscriptions.push(dataCollector, backendServicesModule, showReportCommand, trainTFModelCommand, testGeminiCommand, upgradeToProCommand, statusBarItem, configWatcher);
+    context.subscriptions.push(dataCollector, backendServicesModule, showReportCommand, trainTFModelCommand, testGeminiCommand, upgradeToProCommand, resetExtensionCommand, statusBarItem, configWatcher);
     // Check for new badges periodically
     setInterval(() => {
         const activities = gamificationSystem.getActivitiesForLastWeek();
