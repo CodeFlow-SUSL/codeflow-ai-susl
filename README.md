@@ -24,23 +24,14 @@ Open Command Palette (`Ctrl+Shift+P` or `Cmd+Shift+P`) and type:
 🔷 CodeFlow: Show Weekly Report
    └─ Display comprehensive productivity analytics with charts
 
-🔶 CodeFlow: Toggle Tracking
-   └─ Enable or disable activity tracking
+🔶 CodeFlow: Train TensorFlow.js Model
+   └─ Train local ML model for productivity predictions
 
-🔷 CodeFlow: Show Earned Badges
-   └─ View all unlocked achievements and badges
+🔷 CodeFlow: Test Gemini AI Connection
+   └─ Verify Google Gemini AI integration
 
-🔶 CodeFlow: Enable Cloud Sync
-   └─ Configure team synchronization settings
-
-🔷 CodeFlow: Configure API
-   └─ Set up external AI API integration
-
-🔶 CodeFlow: Export Data
-   └─ Download your activity data as JSON
-
-🔷 CodeFlow: Reset Statistics
-   └─ Clear all collected data (cannot be undone)
+🔶 CodeFlow: Reset Extension to Fresh State
+   └─ Clear all data and reset to initial state (cannot be undone)
 ```
 
 ### 📈 Weekly Report Features
@@ -123,6 +114,7 @@ The weekly report includes:
 - 🌐 **Optional Cloud Sync** - Team insights (opt-in)
 - 🔌 **External API Support** - Use your own AI services
 - ⚙️ **Full Control** - Customize what's tracked
+- 🔄 **Reset Capability** - Fresh start anytime with one command
 
 </td>
 </tr>
@@ -295,21 +287,28 @@ Need help? We're here for you! 💬
 
 ## 🌟 Release Notes
 
-### 🎉 Version 0.0.1 (Initial Release)
+### 🎉 Version 0.1.4 (Latest)
+
+**New Features:**
+- ✨ **Reset Extension Command** - Fresh start with one click
+  - Clears all tracked activity data
+  - Removes badges and progress
+  - Deletes authentication tokens
+  - Returns extension to initial state
+- 🤖 **Google Gemini AI Integration** - Test connection command
+- 🧠 **TensorFlow.js Training** - Train local ML models
 
 **Features:**
-- ✨ Initial release of CodeFlow AI
-- 📊 Activity tracking and analytics
-- 🧠 Local AI-powered insights
-- 🎮 Gamification system
-- 🔐 Privacy-first approach
-- 📈 Weekly productivity reports
-- 🏆 Achievement badges
+- ✨ Activity tracking and analytics
+- 📊 Weekly productivity reports
+- 🧠 AI-powered insights (Gemini + TensorFlow.js)
+- 🎮 Gamification system with badges
+- 🔐 Privacy-first local processing
+- 🏆 Achievement tracking
+- 📈 Beautiful data visualizations
 
-**Coming Soon:**
-- 🌐 Cloud synchronization
-- 🤖 External AI API integration
-- 📱 Enhanced visualizations
+**Previous Releases:**
+- 🎯 Version 0.0.1 - Initial release with core features
 
 ---
 
