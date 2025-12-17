@@ -41,6 +41,7 @@ const aiAnalyzer_1 = require("./aiAnalyzer");
 const visualization_1 = require("./visualization");
 const gamification_1 = require("./gamification");
 const backendServices_1 = require("./backendServices");
+const geminiService_1 = require("./geminiService");
 const child_process_1 = require("child_process");
 const path = __importStar(require("path"));
 // TODO: Fix React component compilation issues
@@ -124,6 +125,40 @@ function activate(context) {
             vscode.window.showErrorMessage(`Error training TensorFlow.js model: ${error}`);
         }
     });
+    const testGeminiCommand = vscode.commands.registerCommand('codeflow.testGeminiConnection', async () => {
+        try {
+            const geminiService = new geminiService_1.GeminiService();
+            // Show progress notification
+            await vscode.window.withProgress({
+                location: vscode.ProgressLocation.Notification,
+                title: "Testing Gemini AI Connection",
+                cancellable: false
+            }, async (progress) => {
+                progress.report({ message: "Connecting to Gemini API..." });
+                const result = await geminiService.testConnection();
+                if (result.success) {
+                    vscode.window.showInformationMessage(`✅ ${result.message}`, 'View Settings').then(selection => {
+                        if (selection === 'View Settings') {
+                            vscode.commands.executeCommand('workbench.action.openSettings', 'codeflow');
+                        }
+                    });
+                }
+                else {
+                    const action = await vscode.window.showErrorMessage(`❌ ${result.message}`, 'Open Settings', 'Get API Key');
+                    if (action === 'Open Settings') {
+                        vscode.commands.executeCommand('workbench.action.openSettings', 'codeflow.gemini');
+                    }
+                    else if (action === 'Get API Key') {
+                        vscode.env.openExternal(vscode.Uri.parse('https://makersuite.google.com/app/apikey'));
+                    }
+                }
+            });
+        }
+        catch (error) {
+            console.error('Gemini test error:', error);
+            vscode.window.showErrorMessage(`Error testing Gemini connection: ${error}`);
+        }
+    });
     // Register status bar item (CodeFlow icon)
     const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
     statusBarItem.text = '$(rocket) CodeFlow';
@@ -156,7 +191,7 @@ function activate(context) {
         }
     });
     // Add to subscriptions
-    context.subscriptions.push(dataCollector, backendServicesModule, showReportCommand, trainTFModelCommand, statusBarItem, configWatcher);
+    context.subscriptions.push(dataCollector, backendServicesModule, showReportCommand, trainTFModelCommand, testGeminiCommand, statusBarItem, configWatcher);
     // Check for new badges periodically
     setInterval(() => {
         const activities = gamificationSystem.getActivitiesForLastWeek();

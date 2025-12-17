@@ -69,6 +69,11 @@
         "command": "codeflow.trainTFModel",
         "title": "CodeFlow: Train TensorFlow.js Model",
         "icon": "$(beaker)"
+      },
+      {
+        "command": "codeflow.testGeminiConnection",
+        "title": "CodeFlow: Test Gemini AI Connection",
+        "icon": "$(plug)"
       }
     ],
     "configuration": {
@@ -139,6 +144,10 @@
         },
         {
           "command": "codeflow.trainTFModel",
+          "when": "true"
+        },
+        {
+          "command": "codeflow.testGeminiConnection",
           "when": "true"
         }
       ]

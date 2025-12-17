@@ -287,115 +287,36 @@ Keep each item concise (1-2 sentences) and actionable.
         });
 
         return {
-            codeImprovements: codeImprovements.length > 0 ? codeImprovements : this.getDefaultCodeImprovements(),
-            performanceTips: performanceTips.length > 0 ? performanceTips : this.getDefaultPerformanceTips(),
-            badPracticeWarnings: badPracticeWarnings.length > 0 ? badPracticeWarnings : this.getDefaultWarnings(),
-            refactoringIdeas: refactoringIdeas.length > 0 ? refactoringIdeas : this.getDefaultRefactoringIdeas(),
-            productivityHints: productivityHints.length > 0 ? productivityHints : this.getDefaultProductivityHints()
+            codeImprovements,
+            performanceTips,
+            badPracticeWarnings,
+            refactoringIdeas,
+            productivityHints
         };
     }
 
     private getFallbackInsights(insight: ProductivityInsight): GeminiInsights {
+        // Return empty insights with a message encouraging Gemini AI usage
+        const enableMessage = '💡 Enable Gemini AI in settings (codeflow.useGeminiAI) and add your API key (codeflow.geminiApiKey) to get personalized, AI-powered insights based on your coding patterns.';
+        
         return {
-            codeImprovements: this.getContextualCodeImprovements(insight),
-            performanceTips: this.getContextualPerformanceTips(insight),
-            badPracticeWarnings: this.getContextualWarnings(insight),
-            refactoringIdeas: this.getContextualRefactoringIdeas(insight),
-            productivityHints: this.getContextualProductivityHints(insight)
+            codeImprovements: [enableMessage],
+            performanceTips: [],
+            badPracticeWarnings: [],
+            refactoringIdeas: [],
+            productivityHints: []
         };
     }
 
-    private getContextualCodeImprovements(insight: ProductivityInsight): string[] {
-        const improvements: string[] = [];
 
-        if (insight.languageDistribution.length > 0) {
-            const topLang = insight.languageDistribution[0].language;
-            improvements.push(`Consider using ${topLang}-specific linters and formatters to maintain code quality.`);
-        }
 
-        if (insight.fileSwitchCount > 50) {
-            improvements.push('High file switch count detected. Consider organizing related code into modules.');
-        }
 
-        improvements.push('Use consistent naming conventions across your codebase.');
-        improvements.push('Add comprehensive comments for complex logic blocks.');
-        improvements.push('Implement proper error handling in critical sections.');
 
-        return improvements.slice(0, 5);
-    }
 
-    private getContextualPerformanceTips(insight: ProductivityInsight): string[] {
-        const tips: string[] = [];
 
-        if (insight.activeHourRange.latest && insight.activeHourRange.earliest) {
-            const range = insight.activeHourRange.latest - insight.activeHourRange.earliest;
-            if (range > 10) {
-                tips.push('Consider focusing your coding sessions during peak productivity hours.');
-            }
-        }
 
-        if (insight.fileSwitchCount > 30) {
-            tips.push('Reduce context switching by completing tasks in one file before moving to another.');
-        }
 
-        tips.push('Use keyboard shortcuts to speed up common operations.');
-        tips.push('Leverage code snippets and templates for repetitive patterns.');
 
-        return tips.slice(0, 4);
-    }
-
-    private getContextualWarnings(insight: ProductivityInsight): string[] {
-        const warnings: string[] = [];
-
-        if (insight.streakDays === 0) {
-            warnings.push('No coding streak detected. Try to code consistently to build momentum.');
-        }
-
-        if (insight.totalActiveMinutes < 60 && insight.dailyCodingMinutes.length > 2) {
-            warnings.push('Low coding time detected. Consider setting dedicated coding blocks.');
-        }
-
-        if (insight.fileSwitchCount > 100) {
-            warnings.push('Excessive file switching may indicate scattered focus or unclear task planning.');
-        }
-
-        return warnings.slice(0, 3);
-    }
-
-    private getContextualRefactoringIdeas(insight: ProductivityInsight): string[] {
-        const ideas: string[] = [];
-
-        if (insight.mostWorkedFiles.length > 0) {
-            const topFile = insight.mostWorkedFiles[0];
-            if (topFile.time > 60) {
-                ideas.push(`Consider breaking down ${topFile.file} into smaller, more manageable modules.`);
-            }
-        }
-
-        ideas.push('Extract repeated code patterns into reusable functions.');
-        ideas.push('Review and simplify complex conditional logic.');
-        ideas.push('Consider using design patterns for better code organization.');
-
-        return ideas.slice(0, 4);
-    }
-
-    private getContextualProductivityHints(insight: ProductivityInsight): string[] {
-        const hints: string[] = [];
-
-        if (insight.streakDays > 0) {
-            hints.push(`Great job maintaining a ${insight.streakDays}-day streak! Keep the momentum going.`);
-        }
-
-        if (insight.uniqueLanguages > 1) {
-            hints.push('Working with multiple languages? Document language-specific conventions for quick reference.');
-        }
-
-        hints.push('Take regular breaks to maintain focus and prevent burnout.');
-        hints.push('Use VS Code extensions to automate repetitive tasks.');
-        hints.push('Set daily coding goals to track progress and stay motivated.');
-
-        return hints.slice(0, 5);
-    }
 
     /**
      * Test the Gemini API connection
@@ -438,51 +359,15 @@ Keep each item concise (1-2 sentences) and actionable.
         }
     }
 
-    private getDefaultCodeImprovements(): string[] {
-        return [
-            'Use consistent code formatting across all files.',
-            'Add meaningful comments to complex logic.',
-            'Follow SOLID principles for better maintainability.',
-            'Implement unit tests for critical functions.',
-            'Use version control best practices with clear commit messages.'
-        ];
-    }
 
-    private getDefaultPerformanceTips(): string[] {
-        return [
-            'Master keyboard shortcuts for common operations.',
-            'Use multi-cursor editing for batch changes.',
-            'Leverage IntelliSense and autocomplete features.',
-            'Set up custom code snippets for frequent patterns.'
-        ];
-    }
 
-    private getDefaultWarnings(): string[] {
-        return [
-            'Avoid deeply nested code structures - consider refactoring.',
-            'Watch out for code duplication - extract common patterns.',
-            'Be mindful of large file sizes - split when necessary.'
-        ];
-    }
 
-    private getDefaultRefactoringIdeas(): string[] {
-        return [
-            'Extract long methods into smaller, focused functions.',
-            'Consider using dependency injection for better testability.',
-            'Review and update outdated dependencies.',
-            'Simplify complex conditional statements.'
-        ];
-    }
 
-    private getDefaultProductivityHints(): string[] {
-        return [
-            'Set specific coding goals for each session.',
-            'Use the Pomodoro Technique for focused work periods.',
-            'Keep a coding journal to track progress and learnings.',
-            'Minimize distractions during deep work sessions.',
-            'Review and refactor code regularly to maintain quality.'
-        ];
-    }
+
+
+
+
+
 
     public isGeminiEnabled(): boolean {
         return this.isEnabled && this.model !== null;

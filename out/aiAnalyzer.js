@@ -93,15 +93,22 @@ class AIAnalyzer {
             }
             catch (error) {
                 console.error('Error generating Gemini insights:', error);
-                // Keep existing suggestions or add basic ones
-                if (insight.suggestions.length === 0) {
-                    insight.suggestions = this.generateBasicSuggestions(insight);
-                }
+                // Show message encouraging Gemini AI setup
+                insight.suggestions = [
+                    '🤖 AI Insights Unavailable: Enable Gemini AI in CodeFlow settings to get personalized, AI-powered insights.',
+                    '⚙️ Setup: Set codeflow.useGeminiAI to true and add your Gemini API key in codeflow.geminiApiKey.',
+                    '🔗 Get API Key: Visit https://makersuite.google.com/app/apikey to get your free Gemini API key.'
+                ];
             }
         }
-        else if (insight.suggestions.length === 0) {
-            // Generate basic suggestions if no AI is enabled
-            insight.suggestions = this.generateBasicSuggestions(insight);
+        else {
+            // Gemini is not enabled - show setup instructions
+            insight.suggestions = [
+                '🤖 AI Insights Not Enabled: Gemini AI is currently disabled.',
+                '⚙️ Enable AI: Go to Settings → Extensions → CodeFlow AI → Use Gemini AI (check the box).',
+                '🔑 Add API Key: Get a free API key from https://makersuite.google.com/app/apikey',
+                '💡 Benefits: Get personalized code improvements, performance tips, and productivity insights tailored to your coding patterns.'
+            ];
         }
         return insight;
     }
@@ -480,44 +487,6 @@ class AIAnalyzer {
         const fileFactor = Math.min(files.size / 5, 1) * 15;
         score += fileFactor;
         return Math.round(Math.min(score, 100));
-    }
-    generateBasicSuggestions(insight) {
-        const suggestions = [];
-        // Productivity score based suggestions
-        if (insight.productivityScore < 50) {
-            suggestions.push('💡 Code Improvement: Try to maintain consistent coding sessions to improve productivity.');
-        }
-        else if (insight.productivityScore > 80) {
-            suggestions.push('🎯 Productivity: Excellent productivity! Keep maintaining your current coding habits.');
-        }
-        // Streak based suggestions
-        if (insight.streakDays === 0) {
-            suggestions.push('🎯 Productivity: Start a coding streak by committing to daily practice.');
-        }
-        else if (insight.streakDays >= 7) {
-            suggestions.push(`🎯 Productivity: Amazing ${insight.streakDays}-day streak! Consistency is key to mastery.`);
-        }
-        // File switching suggestions
-        if (insight.fileSwitchCount > 50) {
-            suggestions.push('⚠️ Warning: High file switching detected. Consider focusing on one task at a time.');
-            suggestions.push('🔧 Refactoring: Group related functionality to reduce context switching.');
-        }
-        // Language diversity suggestions
-        if (insight.uniqueLanguages > 3) {
-            suggestions.push('💡 Code Improvement: Working with multiple languages? Ensure consistent coding standards across all.');
-        }
-        // Active hours suggestions
-        if (insight.activeHourRange.latest && insight.activeHourRange.earliest) {
-            const range = insight.activeHourRange.latest - insight.activeHourRange.earliest;
-            if (range > 12) {
-                suggestions.push('⚠️ Warning: Long coding hours detected. Remember to take regular breaks.');
-            }
-        }
-        // General suggestions
-        suggestions.push('⚡ Performance: Use keyboard shortcuts to speed up common operations.');
-        suggestions.push('💡 Code Improvement: Regularly review and refactor code to maintain quality.');
-        suggestions.push('🔧 Refactoring: Extract repeated patterns into reusable components.');
-        return suggestions;
     }
 }
 exports.AIAnalyzer = AIAnalyzer;
