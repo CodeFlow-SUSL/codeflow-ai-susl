@@ -2,10 +2,10 @@
   "name": "codeflow-ai",
   "displayName": "CodeFlow AI",
   "description": "AI-powered VS Code extension that tracks coding habits and provides productivity insights.",
-  "version": "0.1.3",
+  "version": "0.1.9",
   "publisher": "CodeFlowAI",
   "icon": "./icon/2.png",
-   "repository": {
+  "repository": {
     "type": "git",
     "url": "https://github.com/CodeFlow-SUSL/codeflow-ai-susl.git"
   },
@@ -47,6 +47,7 @@
     "typescript": "^5.8.3"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.21.0",
     "@tensorflow/tfjs": "^4.22.0",
     "@types/chart.js": "^2.9.41",
     "@types/react": "^18.2.45",
@@ -65,49 +66,19 @@
         "icon": "$(chart-line)"
       },
       {
-        "command": "codeflow.toggleTracking",
-        "title": "CodeFlow: Toggle Tracking",
-        "icon": "$(eye)"
-      },
-      {
-        "command": "codeflow.showBadges",
-        "title": "CodeFlow: Show Earned Badges",
-        "icon": "$(star-full)"
-      },
-      {
-        "command": "codeflow.enableCloudSync",
-        "title": "CodeFlow: Enable Cloud Sync",
-        "icon": "$(cloud-upload)"
-      },
-      {
-        "command": "codeflow.configureAPI",
-        "title": "CodeFlow: Configure AI API",
-        "icon": "$(settings-gear)"
-      },
-      {
         "command": "codeflow.trainTFModel",
         "title": "CodeFlow: Train TensorFlow.js Model",
         "icon": "$(beaker)"
       },
       {
-        "command": "codeflow.setGoal",
-        "title": "CodeFlow: Set Goal",
-        "icon": "$(target)"
+        "command": "codeflow.testGeminiConnection",
+        "title": "CodeFlow: Test Gemini AI Connection",
+        "icon": "$(plug)"
       },
       {
-        "command": "codeflow.viewStats",
-        "title": "CodeFlow: View Statistics",
-        "icon": "$(graph)"
-      },
-      {
-        "command": "codeflow.comparePerformance",
-        "title": "CodeFlow: Compare Performance",
-        "icon": "$(graph-line)"
-      },
-      {
-        "command": "codeflow.exportData",
-        "title": "CodeFlow: Export Data",
-        "icon": "$(export)"
+        "command": "codeflow.resetExtension",
+        "title": "CodeFlow: Reset Extension to Fresh State",
+        "icon": "$(trash)"
       }
     ],
     "configuration": {
@@ -138,6 +109,16 @@
           "default": "",
           "description": "API key for external AI analysis"
         },
+        "codeflow.useGeminiAI": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable Google Gemini AI for advanced code insights"
+        },
+        "codeflow.geminiApiKey": {
+          "type": "string",
+          "default": "",
+          "description": "Google Gemini API key for AI-powered insights"
+        },
         "codeflow.useTFModel": {
           "type": "boolean",
           "default": false,
@@ -167,39 +148,15 @@
           "when": "true"
         },
         {
-          "command": "codeflow.toggleTracking",
-          "when": "true"
-        },
-        {
-          "command": "codeflow.showBadges",
-          "when": "true"
-        },
-        {
-          "command": "codeflow.enableCloudSync",
-          "when": "true"
-        },
-        {
-          "command": "codeflow.configureAPI",
-          "when": "true"
-        },
-        {
           "command": "codeflow.trainTFModel",
           "when": "true"
         },
         {
-          "command": "codeflow.setGoal",
+          "command": "codeflow.testGeminiConnection",
           "when": "true"
         },
         {
-          "command": "codeflow.viewStats",
-          "when": "true"
-        },
-        {
-          "command": "codeflow.comparePerformance",
-          "when": "true"
-        },
-        {
-          "command": "codeflow.exportData",
+          "command": "codeflow.resetExtension",
           "when": "true"
         }
       ]

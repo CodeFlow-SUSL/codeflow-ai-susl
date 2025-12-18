@@ -527,6 +527,13 @@ class VisualizationPanel {
         if (refreshBtn) refreshBtn.addEventListener('click', refreshDashboard);
         if (exportBtn) exportBtn.addEventListener('click', exportReport);
         if (upgradeBtn) upgradeBtn.addEventListener('click', requestUpgrade);
+        
+        // Event delegation for delete buttons
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.delete-btn')) {
+                deleteSuggestion(e.target.closest('.delete-btn'));
+            }
+        });
     });
 
     function showExportModal() {
@@ -707,10 +714,21 @@ class VisualizationPanel {
         try {
             console.log('Downloading PDF...');
             
-            // Show loading notification
+            // Show enhanced loading notification
             const notification = document.createElement('div');
-            notification.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #0066cc; color: white; padding: 16px 24px; border-radius: 8px; z-index: 10000; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); animation: slideInRight 0.3s ease;';
-            notification.innerHTML = '<div style="display: flex; align-items: center; gap: 12px;"><div style="width: 16px; height: 16px; border: 2px solid white; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite;"></div><span>Generating PDF report...</span></div><style>@keyframes spin { to { transform: rotate(360deg); } } @keyframes slideInRight { from { transform: translateX(400px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }</style>';
+            notification.style.cssText = 'position: fixed; top: 20px; right: 20px; background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%); color: white; padding: 20px 28px; border-radius: 12px; z-index: 10000; box-shadow: 0 8px 24px rgba(0, 102, 204, 0.3); animation: slideInRight 0.3s ease; border: 2px solid rgba(255, 255, 255, 0.2);';
+            notification.innerHTML = '<div style="display: flex; align-items: center; gap: 14px;">' +
+                '<div style="width: 32px; height: 32px; border: 3px solid rgba(255, 255, 255, 0.3); border-top-color: white; border-radius: 50%; animation: spin 1s linear infinite;"></div>' +
+                '<div>' +
+                '<div style="font-weight: 600; font-size: 15px; margin-bottom: 2px;">Creating PDF...</div>' +
+                '<div style="font-size: 12px; opacity: 0.9;">Adding colors and styling</div>' +
+                '</div>' +
+                '</div>' +
+                '<style>' +
+                '@keyframes spin { to { transform: rotate(360deg); } }' +
+                '@keyframes slideInRight { from { transform: translateX(400px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }' +
+                '@keyframes slideOutRight { from { transform: translateX(0); opacity: 1; } to { transform: translateX(400px); opacity: 0; } }' +
+                '</style>';
             document.body.appendChild(notification);
 
             // Check if jsPDF is loaded
@@ -730,177 +748,381 @@ class VisualizationPanel {
             const margin = 15;
             let yPos = margin;
 
+            // Color palette for the report
+            const colors = {
+                primary: [37, 99, 235],      // Blue
+                secondary: [16, 185, 129],    // Green
+                accent: [245, 158, 11],       // Orange
+                danger: [239, 68, 68],        // Red
+                purple: [139, 92, 246],       // Purple
+                pink: [236, 72, 153],         // Pink
+                teal: [20, 184, 166],         // Teal
+                gray: [107, 114, 128],        // Gray
+                lightGray: [229, 231, 235],   // Light Gray
+                darkGray: [55, 65, 81]        // Dark Gray
+            };
+
             // Helper function to add new page if needed
             function checkNewPage(requiredSpace) {
                 if (yPos + requiredSpace > pageHeight - margin) {
                     pdf.addPage();
                     yPos = margin;
+                    
+                    // Add decorative header on new pages
+                    pdf.setFillColor(...colors.primary);
+                    pdf.rect(0, 0, pageWidth, 8, 'F');
+                    yPos += 5;
+                    
                     return true;
                 }
                 return false;
             }
 
-            // Title
-            pdf.setFontSize(24);
-            pdf.setTextColor(0, 102, 204);
-            pdf.text('CodeFlow AI Report', pageWidth / 2, yPos, { align: 'center' });
+            // Add colorful header banner
+            pdf.setFillColor(...colors.primary);
+            pdf.rect(0, 0, pageWidth, 35, 'F');
+            
+            // Add gradient effect with rectangles
+            pdf.setFillColor(59, 130, 246);
+            pdf.rect(0, 25, pageWidth, 10, 'F');
+            
+            // Title with shadow effect
+            pdf.setFontSize(28);
+            pdf.setTextColor(255, 255, 255);
+            pdf.text('CodeFlow AI Report', pageWidth / 2, 15, { align: 'center' });
+            
+            // Subtitle
+            pdf.setFontSize(11);
+            pdf.setTextColor(220, 220, 255);
+            pdf.text('Your Comprehensive Coding Analytics', pageWidth / 2, 23, { align: 'center' });
+            
+            yPos = 45;
+
+            // Date with icon-style box
+            pdf.setFillColor(...colors.lightGray);
+            pdf.roundedRect(pageWidth / 2 - 45, yPos, 90, 10, 2, 2, 'F');
+            pdf.setFontSize(9);
+            pdf.setTextColor(...colors.darkGray);
+            pdf.text(new Date().toLocaleDateString() + ' | ' + new Date().toLocaleTimeString(), pageWidth / 2, yPos + 6.5, { align: 'center' });
+            yPos += 18;
+
+            // Productivity Score - Large colorful card
+            const scoreCardHeight = 35;
+            
+            // Card background with gradient effect
+            pdf.setFillColor(...colors.primary);
+            pdf.roundedRect(margin, yPos, pageWidth - 2 * margin, scoreCardHeight, 5, 5, 'F');
+            
+            // Lighter overlay for depth
+            pdf.setFillColor(59, 130, 246);
+            pdf.roundedRect(margin, yPos + scoreCardHeight - 15, pageWidth - 2 * margin, 15, 0, 0, 'F');
+            
+            // Score circle
+            pdf.setFillColor(255, 255, 255);
+            pdf.circle(pageWidth / 2, yPos + 15, 18, 'F');
+            
+            // Score value
+            pdf.setFontSize(36);
+            pdf.setTextColor(...colors.primary);
+            pdf.text('${insight.productivityScore}', pageWidth / 2, yPos + 18, { align: 'center' });
+            
+            // Score label
+            pdf.setFontSize(12);
+            pdf.setTextColor(255, 255, 255);
+            pdf.text('PRODUCTIVITY SCORE', pageWidth / 2, yPos + scoreCardHeight - 8, { align: 'center' });
+            
+            // Total hours badge
+            pdf.setFillColor(...colors.secondary);
+            pdf.roundedRect(pageWidth / 2 - 20, yPos + scoreCardHeight - 4, 40, 7, 2, 2, 'F');
+            pdf.setFontSize(9);
+            pdf.setTextColor(255, 255, 255);
+            pdf.text('${totalCodingHours}h Total', pageWidth / 2, yPos + scoreCardHeight, { align: 'center' });
+            
+            yPos += scoreCardHeight + 12;
+
+            // Key Metrics Section - Colorful Cards
+            pdf.setFontSize(18);
+            pdf.setTextColor(...colors.primary);
+            pdf.text('Key Performance Metrics', margin, yPos);
             yPos += 10;
 
-            // Date
-            pdf.setFontSize(10);
-            pdf.setTextColor(100, 100, 100);
-            pdf.text(new Date().toLocaleDateString() + ' | ' + new Date().toLocaleTimeString(), pageWidth / 2, yPos, { align: 'center' });
-            yPos += 15;
-
-            // Productivity Score Box
-            pdf.setFillColor(37, 99, 235);
-            pdf.roundedRect(pageWidth / 2 - 30, yPos, 60, 25, 3, 3, 'F');
-            pdf.setFontSize(32);
-            pdf.setTextColor(255, 255, 255);
-            pdf.text('${insight.productivityScore}', pageWidth / 2, yPos + 13, { align: 'center' });
-            pdf.setFontSize(10);
-            pdf.text('Productivity Score', pageWidth / 2, yPos + 20, { align: 'center' });
-            yPos += 35;
-
-            // Key Metrics Section
-            pdf.setFontSize(16);
-            pdf.setTextColor(0, 0, 0);
-            pdf.text('📊 Key Metrics', margin, yPos);
-            yPos += 8;
-
             const metrics = [
-                { label: 'Total Coding Time', value: '${totalCodingHours}h' },
-                { label: 'Average per Day', value: '${averageDailyHours}h' },
-                { label: 'Current Streak', value: '${streakLabel}' },
-                { label: 'Commands Executed', value: '${totalCommandsFormatted}' },
-                { label: 'Keystrokes Tracked', value: '${totalKeystrokesFormatted}' },
-                { label: 'Files Touched', value: '${uniqueFilesFormatted}' },
-                { label: 'Languages Used', value: '${insight.uniqueLanguages}' },
-                { label: 'Active Window', value: '${activeRangeLabel}' }
+                { label: 'Total Coding Time', value: '${totalCodingHours}h', icon: 'T', color: colors.primary },
+                { label: 'Average per Day', value: '${averageDailyHours}h', icon: 'A', color: colors.secondary },
+                { label: 'Current Streak', value: '${streakLabel}', icon: 'S', color: colors.accent },
+                { label: 'Commands Executed', value: '${totalCommandsFormatted}', icon: 'C', color: colors.purple },
+                { label: 'Keystrokes Tracked', value: '${totalKeystrokesFormatted}', icon: 'K', color: colors.pink },
+                { label: 'Files Touched', value: '${uniqueFilesFormatted}', icon: 'F', color: colors.teal },
+                { label: 'Languages Used', value: '${insight.uniqueLanguages}', icon: 'L', color: colors.danger },
+                { label: 'Active Window', value: '${activeRangeLabel}', icon: 'W', color: colors.gray }
             ];
 
-            pdf.setFontSize(10);
-            const colWidth = (pageWidth - 2 * margin) / 2;
+            const cardWidth = (pageWidth - 2 * margin - 8) / 2;
+            const cardHeight = 18;
+            
             metrics.forEach((metric, index) => {
                 const col = index % 2;
                 const row = Math.floor(index / 2);
-                const x = margin + col * colWidth;
-                const y = yPos + row * 10;
+                const x = margin + col * (cardWidth + 8);
+                const y = yPos + row * (cardHeight + 5);
 
-                pdf.setTextColor(100, 100, 100);
-                pdf.text(metric.label + ':', x, y);
-                pdf.setTextColor(0, 102, 204);
+                checkNewPage(cardHeight + 5);
+                
+                // Card background with color accent
+                pdf.setFillColor(250, 250, 252);
+                pdf.roundedRect(x, y, cardWidth, cardHeight, 3, 3, 'F');
+                
+                // Colored left border
+                pdf.setFillColor(...metric.color);
+                pdf.roundedRect(x, y, 4, cardHeight, 3, 3, 'F');
+                
+                // Icon circle
+                pdf.setFillColor(...metric.color);
+                pdf.circle(x + 10, y + 9, 5, 'F');
+                pdf.setFontSize(10);
+                pdf.setTextColor(255, 255, 255);
+                pdf.text(metric.icon, x + 8.5, y + 11);
+                
+                // Label
+                pdf.setFontSize(8);
+                pdf.setTextColor(...colors.gray);
+                pdf.text(metric.label, x + 18, y + 7);
+                
+                // Value
+                pdf.setFontSize(13);
+                pdf.setTextColor(...colors.darkGray);
                 pdf.setFont(undefined, 'bold');
-                pdf.text(metric.value, x + colWidth - 40, y);
+                pdf.text(metric.value, x + 18, y + 14);
                 pdf.setFont(undefined, 'normal');
             });
-            yPos += Math.ceil(metrics.length / 2) * 10 + 10;
+            
+            yPos += Math.ceil(metrics.length / 2) * (cardHeight + 5) + 12;
 
-            // Language Distribution
-            checkNewPage(60);
-            pdf.setFontSize(14);
-            pdf.setTextColor(0, 0, 0);
-            pdf.text('🌐 Language Distribution', margin, yPos);
-            yPos += 8;
+            // Language Distribution - Colorful bars
+            checkNewPage(70);
+            
+            // Section header with background
+            pdf.setFillColor(...colors.lightGray);
+            pdf.roundedRect(margin, yPos, pageWidth - 2 * margin, 10, 2, 2, 'F');
+            pdf.setFontSize(16);
+            pdf.setTextColor(...colors.primary);
+            pdf.text('Language Distribution', margin + 5, yPos + 7);
+            yPos += 15;
 
-            pdf.setFontSize(9);
+            // Language colors for variety
+            const langColors = [
+                colors.primary, colors.secondary, colors.accent, colors.purple,
+                colors.pink, colors.teal, colors.danger, colors.gray
+            ];
+
+            pdf.setFontSize(10);
             languageData.slice(0, 8).forEach((lang, index) => {
-                pdf.setTextColor(100, 100, 100);
-                pdf.text(lang.language, margin + 5, yPos);
+                checkNewPage(10);
                 
-                // Progress bar
-                const barWidth = 100;
-                const barHeight = 4;
-                pdf.setFillColor(220, 220, 220);
-                pdf.rect(margin + 60, yPos - 3, barWidth, barHeight, 'F');
-                pdf.setFillColor(37, 99, 235);
-                pdf.rect(margin + 60, yPos - 3, barWidth * (lang.percentage / 100), barHeight, 'F');
+                const langColor = langColors[index % langColors.length];
                 
-                pdf.setTextColor(0, 102, 204);
-                pdf.text(lang.percentage.toFixed(1) + '%', margin + 165, yPos);
-                yPos += 7;
+                // Language icon badge
+                pdf.setFillColor(...langColor);
+                pdf.circle(margin + 5, yPos - 1, 2.5, 'F');
+                
+                // Language name
+                pdf.setTextColor(...colors.darkGray);
+                pdf.setFont(undefined, 'bold');
+                pdf.text(lang.language, margin + 10, yPos);
+                pdf.setFont(undefined, 'normal');
+                
+                // Progress bar background
+                const barWidth = 95;
+                const barHeight = 5;
+                const barX = margin + 60;
+                
+                pdf.setFillColor(...colors.lightGray);
+                pdf.roundedRect(barX, yPos - 3.5, barWidth, barHeight, 1.5, 1.5, 'F');
+                
+                // Progress bar fill with gradient effect
+                const fillWidth = barWidth * (lang.percentage / 100);
+                pdf.setFillColor(...langColor);
+                pdf.roundedRect(barX, yPos - 3.5, fillWidth, barHeight, 1.5, 1.5, 'F');
+                
+                // Percentage badge
+                pdf.setFillColor(...langColor);
+                pdf.roundedRect(barX + barWidth + 3, yPos - 3.5, 15, barHeight, 1.5, 1.5, 'F');
+                pdf.setFontSize(8);
+                pdf.setTextColor(255, 255, 255);
+                pdf.text(lang.percentage.toFixed(1) + '%', barX + barWidth + 10.5, yPos + 0.5, { align: 'center' });
+                
+                yPos += 8;
             });
             yPos += 10;
 
-            // Most Used Commands
-            checkNewPage(60);
-            pdf.setFontSize(14);
-            pdf.setTextColor(0, 0, 0);
-            pdf.text('⌨️ Most Used Commands', margin, yPos);
-            yPos += 8;
+            // Most Used Commands - Enhanced styling
+            checkNewPage(70);
+            
+            // Section header with background
+            pdf.setFillColor(...colors.lightGray);
+            pdf.roundedRect(margin, yPos, pageWidth - 2 * margin, 10, 2, 2, 'F');
+            pdf.setFontSize(16);
+            pdf.setTextColor(...colors.purple);
+            pdf.text('Most Used Commands', margin + 5, yPos + 7);
+            yPos += 15;
+
+            const maxCount = Math.max(...commandData.map(c => c.count));
+            const cmdColors = [colors.purple, colors.pink, colors.teal, colors.accent, colors.secondary];
 
             pdf.setFontSize(9);
             commandData.slice(0, 8).forEach((cmd, index) => {
-                pdf.setTextColor(100, 100, 100);
-                const cmdText = cmd.command.length > 35 ? cmd.command.substring(0, 32) + '...' : cmd.command;
-                pdf.text(cmdText, margin + 5, yPos);
+                checkNewPage(10);
                 
-                // Progress bar
-                const maxCount = Math.max(...commandData.map(c => c.count));
+                const cmdColor = cmdColors[index % cmdColors.length];
+                
+                // Rank badge
+                pdf.setFillColor(...cmdColor);
+                pdf.circle(margin + 5, yPos - 1, 3, 'F');
+                pdf.setFontSize(7);
+                pdf.setTextColor(255, 255, 255);
+                pdf.text((index + 1).toString(), margin + 5, yPos + 0.5, { align: 'center' });
+                
+                // Command name
+                pdf.setFontSize(9);
+                pdf.setTextColor(...colors.darkGray);
+                const cmdText = cmd.command.length > 32 ? cmd.command.substring(0, 29) + '...' : cmd.command;
+                pdf.text(cmdText, margin + 11, yPos);
+                
+                // Progress bar background
                 const barWidth = 70;
-                const barHeight = 4;
-                pdf.setFillColor(220, 220, 220);
-                pdf.rect(margin + 90, yPos - 3, barWidth, barHeight, 'F');
-                pdf.setFillColor(37, 99, 235);
-                pdf.rect(margin + 90, yPos - 3, barWidth * (cmd.count / maxCount), barHeight, 'F');
+                const barHeight = 5;
+                const barX = margin + 95;
                 
-                pdf.setTextColor(0, 102, 204);
-                pdf.text(cmd.count.toString(), margin + 165, yPos);
-                yPos += 7;
+                pdf.setFillColor(...colors.lightGray);
+                pdf.roundedRect(barX, yPos - 3.5, barWidth, barHeight, 1.5, 1.5, 'F');
+                
+                // Progress bar fill
+                const fillWidth = barWidth * (cmd.count / maxCount);
+                pdf.setFillColor(...cmdColor);
+                pdf.roundedRect(barX, yPos - 3.5, fillWidth, barHeight, 1.5, 1.5, 'F');
+                
+                // Count badge
+                pdf.setFillColor(...cmdColor);
+                pdf.roundedRect(barX + barWidth + 3, yPos - 3.5, 13, barHeight, 1.5, 1.5, 'F');
+                pdf.setFontSize(7);
+                pdf.setTextColor(255, 255, 255);
+                pdf.text(cmd.count.toString(), barX + barWidth + 9.5, yPos + 0.5, { align: 'center' });
+                
+                yPos += 8;
             });
             yPos += 10;
 
-            // AI Insights
-            checkNewPage(40);
-            pdf.setFontSize(14);
-            pdf.setTextColor(0, 0, 0);
-            pdf.text('🤖 AI-Powered Insights', margin, yPos);
-            yPos += 8;
+            // AI Insights - Enhanced card design
+            checkNewPage(50);
+            
+            // Section header with gradient background
+            pdf.setFillColor(...colors.secondary);
+            pdf.roundedRect(margin, yPos, pageWidth - 2 * margin, 10, 2, 2, 'F');
+            pdf.setFontSize(16);
+            pdf.setTextColor(255, 255, 255);
+            pdf.text('AI-Powered Insights', margin + 5, yPos + 7);
+            yPos += 15;
 
-            pdf.setFontSize(9);
-            pdf.setTextColor(60, 60, 60);
             const insights = ${JSON.stringify(insight.suggestions)};
+            const insightColors = [colors.secondary, colors.primary, colors.accent, colors.purple, colors.teal];
+            
+            pdf.setFontSize(9);
             insights.slice(0, 5).forEach((suggestion, index) => {
-                const lines = pdf.splitTextToSize('• ' + suggestion, pageWidth - 2 * margin - 5);
+                checkNewPage(12);
+                
+                const insightColor = insightColors[index % insightColors.length];
+                
+                // Insight card background
+                pdf.setFillColor(248, 250, 252);
+                pdf.roundedRect(margin, yPos, pageWidth - 2 * margin, 10, 2, 2, 'F');
+                
+                // Colored accent bar
+                pdf.setFillColor(...insightColor);
+                pdf.roundedRect(margin, yPos, 3, 10, 2, 2, 'F');
+                
+                // Bullet point
+                pdf.setFillColor(...insightColor);
+                pdf.circle(margin + 8, yPos + 5, 1.5, 'F');
+                
+                // Insight text
+                pdf.setTextColor(...colors.darkGray);
+                const lines = pdf.splitTextToSize(suggestion, pageWidth - 2 * margin - 18);
+                let textY = yPos + 4;
                 lines.forEach(line => {
-                    checkNewPage(7);
-                    pdf.text(line, margin + 5, yPos);
-                    yPos += 5;
+                    pdf.text(line, margin + 12, textY);
+                    textY += 4;
                 });
-                yPos += 2;
+                
+                yPos += Math.max(10, lines.length * 4 + 2);
             });
+            yPos += 5;
 
-            // Footer
+            // Footer with colorful design
             const totalPages = pdf.internal.getNumberOfPages();
             for (let i = 1; i <= totalPages; i++) {
                 pdf.setPage(i);
+                
+                // Footer background
+                pdf.setFillColor(...colors.primary);
+                pdf.rect(0, pageHeight - 15, pageWidth, 15, 'F');
+                
+                // Footer gradient overlay
+                pdf.setFillColor(59, 130, 246);
+                pdf.rect(0, pageHeight - 15, pageWidth, 7, 'F');
+                
+                // Footer text
                 pdf.setFontSize(8);
-                pdf.setTextColor(150, 150, 150);
-                pdf.text('Generated by CodeFlow AI • ' + new Date().toLocaleDateString(), pageWidth / 2, pageHeight - 10, { align: 'center' });
-                pdf.text('Page ' + i + ' of ' + totalPages, pageWidth - margin, pageHeight - 10, { align: 'right' });
+                pdf.setTextColor(255, 255, 255);
+                pdf.text('Generated by CodeFlow AI', margin, pageHeight - 7);
+                pdf.text(new Date().toLocaleDateString(), pageWidth / 2, pageHeight - 7, { align: 'center' });
+                pdf.text('Page ' + i + ' / ' + totalPages, pageWidth - margin, pageHeight - 7, { align: 'right' });
+                
+                // Decorative dots
+                pdf.setFillColor(255, 255, 255);
+                for (let d = 0; d < 5; d++) {
+                    pdf.circle(margin + 70 + d * 3, pageHeight - 4, 0.5, 'F');
+                }
             }
 
             // Save PDF
             const fileName = 'codeflow-report-' + new Date().toISOString().split('T')[0] + '.pdf';
             pdf.save(fileName);
 
-            // Remove loading notification and show success
+            // Remove loading notification and show enhanced success
             notification.remove();
             const successNotif = document.createElement('div');
-            successNotif.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #10b981; color: white; padding: 16px 24px; border-radius: 8px; z-index: 10000; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); animation: slideInRight 0.3s ease;';
-            successNotif.innerHTML = '<div style="display: flex; align-items: center; gap: 12px;"><span>✓</span><span>PDF downloaded successfully!</span></div>';
+            successNotif.style.cssText = 'position: fixed; top: 20px; right: 20px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 20px 28px; border-radius: 12px; z-index: 10000; box-shadow: 0 8px 24px rgba(16, 185, 129, 0.3); animation: slideInRight 0.3s ease; border: 2px solid rgba(255, 255, 255, 0.3);';
+            successNotif.innerHTML = '<div style="display: flex; align-items: center; gap: 14px;">' +
+                '<div style="width: 32px; height: 32px; background: rgba(255, 255, 255, 0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px;">✓</div>' +
+                '<div>' +
+                '<div style="font-weight: 600; font-size: 15px; margin-bottom: 2px;">PDF Generated!</div>' +
+                '<div style="font-size: 12px; opacity: 0.9;">Your colorful report is ready</div>' +
+                '</div>' +
+                '</div>';
             document.body.appendChild(successNotif);
-            setTimeout(() => successNotif.remove(), 3000);
+            setTimeout(() => {
+                successNotif.style.animation = 'slideOutRight 0.3s ease';
+                setTimeout(() => successNotif.remove(), 300);
+            }, 3000);
             
         } catch (error) {
             console.error('Error generating PDF:', error);
             console.error('Error details:', error.message, error.stack);
             
             const errorNotif = document.createElement('div');
-            errorNotif.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #ef4444; color: white; padding: 16px 24px; border-radius: 8px; z-index: 10000; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);';
-            errorNotif.innerHTML = '<div style="display: flex; align-items: center; gap: 12px;"><span>✕</span><span>Failed to generate PDF. Please try again.</span></div>';
+            errorNotif.style.cssText = 'position: fixed; top: 20px; right: 20px; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; padding: 20px 28px; border-radius: 12px; z-index: 10000; box-shadow: 0 8px 24px rgba(239, 68, 68, 0.3); animation: slideInRight 0.3s ease; border: 2px solid rgba(255, 255, 255, 0.3);';
+            errorNotif.innerHTML = '<div style="display: flex; align-items: center; gap: 14px;">' +
+                '<div style="width: 32px; height: 32px; background: rgba(255, 255, 255, 0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px;">✕</div>' +
+                '<div>' +
+                '<div style="font-weight: 600; font-size: 15px; margin-bottom: 2px;">PDF Generation Failed</div>' +
+                '<div style="font-size: 12px; opacity: 0.9;">Please try again or check console</div>' +
+                '</div>' +
+                '</div>';
             document.body.appendChild(errorNotif);
-            setTimeout(() => errorNotif.remove(), 4000);
+            setTimeout(() => {
+                errorNotif.style.animation = 'slideOutRight 0.3s ease';
+                setTimeout(() => errorNotif.remove(), 300);
+            }, 4000);
         }
     }
     
@@ -1024,6 +1246,67 @@ class VisualizationPanel {
         link.download = 'codeflow-ai-insights-' + new Date().toISOString().split('T')[0] + '.json';
         link.click();
         URL.revokeObjectURL(url);
+    }
+
+    function deleteSuggestion(button) {
+        // Get the list item
+        const listItem = button.closest('.insight-item');
+        const suggestionText = listItem.getAttribute('data-suggestion');
+        
+        // Add fade-out animation
+        listItem.style.opacity = '0';
+        listItem.style.transform = 'translateX(20px)';
+        listItem.style.transition = 'all 0.3s ease';
+        
+        // Remove from DOM after animation
+        setTimeout(() => {
+            const category = listItem.closest('.insight-category');
+            const categoryCount = category.querySelector('.category-count');
+            const insightsList = listItem.closest('.insight-list');
+            
+            // Remove the item
+            listItem.remove();
+            
+            // Update the count
+            const remainingItems = insightsList.querySelectorAll('.insight-item').length;
+            categoryCount.textContent = remainingItems;
+            
+            // Update overall insights count
+            const allCategories = document.querySelectorAll('.insight-category');
+            let totalCount = 0;
+            allCategories.forEach(cat => {
+                const count = parseInt(cat.querySelector('.category-count').textContent);
+                totalCount += count;
+            });
+            const insightsCount = document.querySelector('.insights-count');
+            if (insightsCount) {
+                insightsCount.textContent = totalCount + ' insight' + (totalCount === 1 ? '' : 's');
+            }
+            
+            // If no items left in category, hide the category
+            if (remainingItems === 0) {
+                category.style.display = 'none';
+            }
+            
+            // Update item numbers
+            const items = insightsList.querySelectorAll('.insight-item');
+            items.forEach((item, index) => {
+                const itemNumber = item.querySelector('.item-number');
+                if (itemNumber) {
+                    itemNumber.textContent = index + 1;
+                }
+            });
+            
+            // Show success notification (temporary deletion - will reappear on next report generation)
+            const notification = document.createElement('div');
+            notification.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #10b981; color: white; padding: 12px 20px; border-radius: 8px; z-index: 10000; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); animation: slideInRight 0.3s ease;';
+            notification.innerHTML = '<div style="display: flex; align-items: center; gap: 10px;"><span>\u2713</span><span>Suggestion hidden (temporary)</span></div>';
+            document.body.appendChild(notification);
+            setTimeout(() => {
+                notification.style.animation = 'slideOutRight 0.3s ease';
+                setTimeout(() => notification.remove(), 300);
+            }, 2000);
+        }, 300);
     }
 
     </script>
@@ -1330,8 +1613,37 @@ class VisualizationPanel {
         return statsHtml + badgesHtml;
     }
     buildAiInsightsHtml(insight) {
-        // Categorize suggestions
-        const categorizedSuggestions = this.categorizeSuggestions(insight.suggestions);
+        // Categorize suggestions by type
+        const codeImprovements = [];
+        const performanceTips = [];
+        const warnings = [];
+        const refactoringIdeas = [];
+        const productivityHints = [];
+        // Sort suggestions into categories
+        if (insight.suggestions && insight.suggestions.length > 0) {
+            insight.suggestions.forEach(suggestion => {
+                const lower = suggestion.toLowerCase();
+                if (lower.includes('💡') || lower.includes('code improvement')) {
+                    codeImprovements.push(suggestion.replace(/💡\s*Code Improvement:\s*/i, ''));
+                }
+                else if (lower.includes('⚡') || lower.includes('performance')) {
+                    performanceTips.push(suggestion.replace(/⚡\s*Performance:\s*/i, ''));
+                }
+                else if (lower.includes('⚠️') || lower.includes('warning')) {
+                    warnings.push(suggestion.replace(/⚠️\s*Warning:\s*/i, ''));
+                }
+                else if (lower.includes('🔧') || lower.includes('refactoring')) {
+                    refactoringIdeas.push(suggestion.replace(/🔧\s*Refactoring:\s*/i, ''));
+                }
+                else if (lower.includes('🎯') || lower.includes('productivity')) {
+                    productivityHints.push(suggestion.replace(/🎯\s*Productivity:\s*/i, ''));
+                }
+                else {
+                    // Default to productivity hints
+                    productivityHints.push(suggestion);
+                }
+            });
+        }
         // Calculate productivity patterns
         const patterns = this.analyzeProductivityPatterns(insight);
         // Generate focus metrics
@@ -1340,14 +1652,6 @@ class VisualizationPanel {
         const workLifeBalance = this.analyzeWorkLifeBalance(insight);
         // Productivity trend indicator
         const trendIndicator = this.calculateTrendIndicator(insight);
-        const suggestionItems = (insight.suggestions && insight.suggestions.length > 0)
-            ? insight.suggestions.map((suggestion, index) => `
-                <li class="insight-item" data-category="${categorizedSuggestions[index] || 'general'}">
-                    <span class="insight-icon">${this.getInsightIcon(categorizedSuggestions[index])}</span>
-                    <span class="insight-text">${suggestion}</span>
-                </li>
-            `).join('')
-            : '<li class="insight-item"><span class="insight-icon">💡</span><span class="insight-text">Keep coding to unlock personalized AI suggestions.</span></li>';
         let tfHighlights = '';
         if (insight.tfInsights?.featureImportance) {
             const topFeatures = Object.entries(insight.tfInsights.featureImportance)
@@ -1385,7 +1689,7 @@ class VisualizationPanel {
                 <div class="insight-section trend-section">
                     <div class="section-header">
                         <h3>📊 Productivity Trend</h3>
-                        <span class="trend-badge ${trendIndicator.class}">${trendIndicator.icon} ${trendIndicator.text}</span>
+                <span class="trend-badge ${trendIndicator.class}">${trendIndicator.icon} ${trendIndicator.text}</span>
                     </div>
                     <p class="section-description">${trendIndicator.description}</p>
                 </div>
@@ -1467,14 +1771,155 @@ class VisualizationPanel {
                     </div>
                 </div>
 
-                <!-- AI Suggestions -->
-                <div class="insight-section suggestions-section">
+                <!-- AI-Powered Suggestions with Collapsible Categories -->
+                <div class="insight-section ai-suggestions-section">
                     <div class="section-header">
-                        <h3>💡 Personalized Recommendations</h3>
+                        <h3>🤖 AI-Powered Insights</h3>
+                        <span class="insights-count">${(codeImprovements.length + performanceTips.length + warnings.length + refactoringIdeas.length + productivityHints.length)} insights</span>
                     </div>
-                    <ul class="insight-list">
-                        ${suggestionItems}
-                    </ul>
+                    
+                    <!-- Code Improvements -->
+                    ${codeImprovements.length > 0 ? `
+                    <details class="insight-category code-improvements" open>
+                        <summary class="category-header">
+                            <span class="category-icon">💡</span>
+                            <span class="category-title">Code Improvements</span>
+                            <span class="category-count">${codeImprovements.length}</span>
+                            <span class="expand-icon">▼</span>
+                        </summary>
+                        <div class="category-content">
+                            <ul class="insight-list">
+                                ${codeImprovements.map((item, idx) => `
+                                    <li class="insight-item fade-in" style="animation-delay: ${idx * 0.1}s" data-suggestion="${item.replace(/"/g, '&quot;')}">
+                                        <span class="item-number">${idx + 1}</span>
+                                        <span class="item-text">${item}</span>
+                                        <button class="delete-btn" title="Delete this suggestion">
+                                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M14 1.41L12.59 0L7 5.59L1.41 0L0 1.41L5.59 7L0 12.59L1.41 14L7 8.41L12.59 14L14 12.59L8.41 7L14 1.41Z" fill="currentColor"/>
+                                            </svg>
+                                        </button>
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        </div>
+                    </details>
+                    ` : ''}
+                    
+                    <!-- Performance Tips -->
+                    ${performanceTips.length > 0 ? `
+                    <details class="insight-category performance-tips" open>
+                        <summary class="category-header">
+                            <span class="category-icon">⚡</span>
+                            <span class="category-title">Performance Tips</span>
+                            <span class="category-count">${performanceTips.length}</span>
+                            <span class="expand-icon">▼</span>
+                        </summary>
+                        <div class="category-content">
+                            <ul class="insight-list">
+                                ${performanceTips.map((item, idx) => `
+                                    <li class="insight-item fade-in" style="animation-delay: ${idx * 0.1}s" data-suggestion="${item.replace(/"/g, '&quot;')}">
+                                        <span class="item-number">${idx + 1}</span>
+                                        <span class="item-text">${item}</span>
+                                        <button class="delete-btn" title="Delete this suggestion">
+                                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M14 1.41L12.59 0L7 5.59L1.41 0L0 1.41L5.59 7L0 12.59L1.41 14L7 8.41L12.59 14L14 12.59L8.41 7L14 1.41Z" fill="currentColor"/>
+                                            </svg>
+                                        </button>
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        </div>
+                    </details>
+                    ` : ''}
+                    
+                    <!-- Warnings -->
+                    ${warnings.length > 0 ? `
+                    <details class="insight-category warnings" open>
+                        <summary class="category-header">
+                            <span class="category-icon">⚠️</span>
+                            <span class="category-title">Bad Practice Warnings</span>
+                            <span class="category-count">${warnings.length}</span>
+                            <span class="expand-icon">▼</span>
+                        </summary>
+                        <div class="category-content">
+                            <ul class="insight-list">
+                                ${warnings.map((item, idx) => `
+                                    <li class="insight-item fade-in" style="animation-delay: ${idx * 0.1}s" data-suggestion="${item.replace(/"/g, '&quot;')}">
+                                        <span class="item-number">${idx + 1}</span>
+                                        <span class="item-text">${item}</span>
+                                        <button class="delete-btn" title="Delete this suggestion">
+                                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M14 1.41L12.59 0L7 5.59L1.41 0L0 1.41L5.59 7L0 12.59L1.41 14L7 8.41L12.59 14L14 12.59L8.41 7L14 1.41Z" fill="currentColor"/>
+                                            </svg>
+                                        </button>
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        </div>
+                    </details>
+                    ` : ''}
+                    
+                    <!-- Refactoring Ideas -->
+                    ${refactoringIdeas.length > 0 ? `
+                    <details class="insight-category refactoring" open>
+                        <summary class="category-header">
+                            <span class="category-icon">🔧</span>
+                            <span class="category-title">Refactoring Ideas</span>
+                            <span class="category-count">${refactoringIdeas.length}</span>
+                            <span class="expand-icon">▼</span>
+                        </summary>
+                        <div class="category-content">
+                            <ul class="insight-list">
+                                ${refactoringIdeas.map((item, idx) => `
+                                    <li class="insight-item fade-in" style="animation-delay: ${idx * 0.1}s" data-suggestion="${item.replace(/"/g, '&quot;')}">
+                                        <span class="item-number">${idx + 1}</span>
+                                        <span class="item-text">${item}</span>
+                                        <button class="delete-btn" title="Delete this suggestion">
+                                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M14 1.41L12.59 0L7 5.59L1.41 0L0 1.41L5.59 7L0 12.59L1.41 14L7 8.41L12.59 14L14 12.59L8.41 7L14 1.41Z" fill="currentColor"/>
+                                            </svg>
+                                        </button>
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        </div>
+                    </details>
+                    ` : ''}
+                    
+                    <!-- Productivity Hints -->
+                    ${productivityHints.length > 0 ? `
+                    <details class="insight-category productivity" open>
+                        <summary class="category-header">
+                            <span class="category-icon">🎯</span>
+                            <span class="category-title">Productivity Hints</span>
+                            <span class="category-count">${productivityHints.length}</span>
+                            <span class="expand-icon">▼</span>
+                        </summary>
+                        <div class="category-content">
+                            <ul class="insight-list">
+                                ${productivityHints.map((item, idx) => `
+                                    <li class="insight-item fade-in" style="animation-delay: ${idx * 0.1}s" data-suggestion="${item.replace(/"/g, '&quot;')}">
+                                        <span class="item-number">${idx + 1}</span>
+                                        <span class="item-text">${item}</span>
+                                        <button class="delete-btn" title="Delete this suggestion">
+                                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M14 1.41L12.59 0L7 5.59L1.41 0L0 1.41L5.59 7L0 12.59L1.41 14L7 8.41L12.59 14L14 12.59L8.41 7L14 1.41Z" fill="currentColor"/>
+                                            </svg>
+                                        </button>
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        </div>
+                    </details>
+                    ` : ''}
+                    
+                    ${(codeImprovements.length + performanceTips.length + warnings.length + refactoringIdeas.length + productivityHints.length) === 0 ? `
+                        <div class="no-insights">
+                            <span class="no-insights-icon">💡</span>
+                            <p>Keep coding to unlock personalized AI suggestions!</p>
+                            <small>Generate reports regularly to get actionable insights.</small>
+                        </div>
+                    ` : ''}
                 </div>
 
                 ${tfHighlights}

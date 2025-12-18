@@ -38,14 +38,17 @@ const vscode = __importStar(require("vscode"));
 const path = __importStar(require("path"));
 const fs = __importStar(require("fs"));
 const child_process_1 = require("child_process");
+const geminiService_1 = require("./geminiService");
 class AIAnalyzer {
     context;
     useExternalAPI = false;
     apiEndpoint = '';
     apiKey = '';
     useTFModel = false;
+    geminiService;
     constructor(context) {
         this.context = context;
+        this.geminiService = new geminiService_1.GeminiService();
         // Check if external API is configured
         const config = vscode.workspace.getConfiguration('codeflow');
         this.useExternalAPI = config.get('useExternalAPI', false);
@@ -65,15 +68,49 @@ class AIAnalyzer {
             activities.push(...dayActivities);
         }
         // Choose analysis method based on configuration
+        let insight;
         if (this.useExternalAPI && this.apiEndpoint && this.apiKey) {
-            return this.analyzeWithExternalAPI(activities, days);
+            insight = await this.analyzeWithExternalAPI(activities, days);
         }
         else if (this.useTFModel) {
-            return this.analyzeWithTFModel(activities, days);
+            insight = await this.analyzeWithTFModel(activities, days);
         }
         else {
-            return this.performLocalAnalysis(activities, days);
+            insight = this.performLocalAnalysis(activities, days);
         }
+        // Generate AI-powered suggestions using Gemini if enabled
+        if (this.geminiService.isGeminiEnabled()) {
+            try {
+                const geminiInsights = await this.geminiService.generateInsights(insight, activities);
+                // Combine all insights into suggestions array
+                insight.suggestions = [
+                    ...geminiInsights.codeImprovements.map(s => `💡 Code Improvement: ${s}`),
+                    ...geminiInsights.performanceTips.map(s => `⚡ Performance: ${s}`),
+                    ...geminiInsights.badPracticeWarnings.map(s => `⚠️ Warning: ${s}`),
+                    ...geminiInsights.refactoringIdeas.map(s => `🔧 Refactoring: ${s}`),
+                    ...geminiInsights.productivityHints.map(s => `🎯 Productivity: ${s}`)
+                ];
+            }
+            catch (error) {
+                console.error('Error generating Gemini insights:', error);
+                // Show message encouraging Gemini AI setup
+                insight.suggestions = [
+                    '🤖 AI Insights Unavailable: Enable Gemini AI in CodeFlow settings to get personalized, AI-powered insights.',
+                    '⚙️ Setup: Set codeflow.useGeminiAI to true and add your Gemini API key in codeflow.geminiApiKey.',
+                    '🔗 Get API Key: Visit https://makersuite.google.com/app/apikey to get your free Gemini API key.'
+                ];
+            }
+        }
+        else {
+            // Gemini is not enabled - show setup instructions
+            insight.suggestions = [
+                '🤖 AI Insights Not Enabled: Gemini AI is currently disabled.',
+                '⚙️ Enable AI: Go to Settings → Extensions → CodeFlow AI → Use Gemini AI (check the box).',
+                '🔑 Add API Key: Get a free API key from https://makersuite.google.com/app/apikey',
+                '💡 Benefits: Get personalized code improvements, performance tips, and productivity insights tailored to your coding patterns.'
+            ];
+        }
+        return insight;
     }
     getActivitiesForDate(date) {
         const storagePath = this.context.globalStorageUri.fsPath;
@@ -163,14 +200,18 @@ class AIAnalyzer {
             }
             // Update session data
             currentSession.lastActivity = activity.timestamp;
-            if (activity.keystrokes)
+            if (activity.keystrokes) {
                 currentSession.keystrokes += activity.keystrokes;
-            if (activity.command)
+            }
+            if (activity.command) {
                 currentSession.commands++;
-            if (activity.file)
+            }
+            if (activity.file) {
                 currentSession.files.add(activity.file);
-            if (activity.language)
+            }
+            if (activity.language) {
                 currentSession.languages.add(activity.language);
+            }
         }
         // Convert sessions to TF input format
         const tfSessions = sessions.map(session => {
@@ -285,7 +326,7 @@ class AIAnalyzer {
                 percentage: Math.round((count / totalLanguageActivities) * 100)
             }))
                 .sort((a, b) => b.percentage - a.percentage);
-        const suggestions = this.generateSuggestions(activities, commandCounts, fileCounts);
+        const suggestions = [];
         return {
             productivityScore,
             mostUsedCommands,
@@ -429,8 +470,9 @@ class AIAnalyzer {
         };
     }
     calculateProductivityScore(activities) {
-        if (activities.length === 0)
+        if (activities.length === 0) {
             return 0;
+        }
         // Calculate based on various factors
         let score = 50; // Base score
         // Factor 1: Activity frequency (more activities = higher score, up to a point)
@@ -445,110 +487,6 @@ class AIAnalyzer {
         const fileFactor = Math.min(files.size / 5, 1) * 15;
         score += fileFactor;
         return Math.round(Math.min(score, 100));
-    }
-    generateSuggestions(activities, commandCounts, fileCounts) {
-        const suggestions = [];
-        // Check for repetitive commands
-        const totalCommands = Object.values(commandCounts).reduce((sum, count) => sum + count, 0);
-        if (totalCommands > 0) {
-            const mostUsedCommand = Object.entries(commandCounts)
-                .sort((a, b) => b[1] - a[1])[0];
-            if (mostUsedCommand[1] / totalCommands > 0.3) {
-                suggestions.push(`You use "${mostUsedCommand[0]}" frequently (${Math.round(mostUsedCommand[1] / totalCommands * 100)}% of commands). Create a custom keyboard shortcut to boost efficiency by 40%.`);
-            }
-        }
-        // Analyze coding session patterns
-        const sortedActivities = [...activities].sort((a, b) => a.timestamp - b.timestamp);
-        let longSessionCount = 0;
-        let sessionLengths = [];
-        let currentSessionStart = sortedActivities[0]?.timestamp || 0;
-        for (let i = 1; i < sortedActivities.length; i++) {
-            const timeDiff = sortedActivities[i].timestamp - sortedActivities[i - 1].timestamp;
-            // If gap > 30 minutes, consider it a new session
-            if (timeDiff > 30 * 60 * 1000) {
-                const sessionLength = sortedActivities[i - 1].timestamp - currentSessionStart;
-                sessionLengths.push(sessionLength);
-                currentSessionStart = sortedActivities[i].timestamp;
-                if (sessionLength > 2 * 60 * 60 * 1000) { // 2 hours
-                    longSessionCount++;
-                }
-            }
-        }
-        // Add last session
-        if (sortedActivities.length > 0) {
-            sessionLengths.push(sortedActivities[sortedActivities.length - 1].timestamp - currentSessionStart);
-        }
-        const avgSessionLength = sessionLengths.length > 0
-            ? sessionLengths.reduce((sum, len) => sum + len, 0) / sessionLengths.length
-            : 0;
-        const avgSessionMinutes = Math.round(avgSessionLength / (60 * 1000));
-        // Break recommendations based on session length
-        if (longSessionCount > 2) {
-            suggestions.push(`You had ${longSessionCount} sessions over 2 hours. Taking 5-10 minute breaks every 90 minutes can improve focus by up to 30%.`);
-        }
-        else if (avgSessionMinutes > 90) {
-            suggestions.push(`Your average session is ${avgSessionMinutes} minutes. Consider the Pomodoro technique (25min work + 5min break) to optimize sustained focus.`);
-        }
-        // File switching analysis
-        const fileSwitches = activities.filter(a => a.file).length;
-        const uniqueFiles = Object.keys(fileCounts).length;
-        const switchRate = uniqueFiles > 0 ? fileSwitches / uniqueFiles : 0;
-        if (fileSwitches > 100 && switchRate > 10) {
-            suggestions.push(`You switched files ${fileSwitches} times across ${uniqueFiles} files. Try using 'Ctrl+Tab' for quick navigation or create a custom workspace layout to reduce context switching.`);
-        }
-        else if (uniqueFiles > 20) {
-            suggestions.push(`You worked on ${uniqueFiles} different files. Pin frequently accessed files or use VS Code's breadcrumb navigation to improve workflow efficiency.`);
-        }
-        // Language diversity analysis
-        const languages = new Set(activities.map(a => a.language).filter(Boolean));
-        if (languages.size > 3) {
-            suggestions.push(`You're working with ${languages.size} programming languages. Consider installing language-specific extensions and configuring unified formatting rules to maintain consistency.`);
-        }
-        // Command efficiency analysis
-        const commandTypes = Object.keys(commandCounts);
-        const editorCommands = commandTypes.filter(cmd => cmd.includes('editor') || cmd.includes('type')).length;
-        const navCommands = commandTypes.filter(cmd => cmd.includes('navigate') || cmd.includes('goto')).length;
-        if (navCommands > editorCommands * 0.5) {
-            suggestions.push("You use navigation commands frequently. Master 'Go to Definition' (F12) and 'Go to Symbol' (Ctrl+Shift+O) to navigate code 3x faster.");
-        }
-        // Time-based insights
-        const activityByHour = {};
-        activities.forEach(activity => {
-            const hour = new Date(activity.timestamp).getHours();
-            activityByHour[hour] = (activityByHour[hour] || 0) + 1;
-        });
-        const lateNightActivity = Object.entries(activityByHour)
-            .filter(([hour]) => parseInt(hour) >= 22 || parseInt(hour) <= 5)
-            .reduce((sum, [, count]) => sum + count, 0);
-        if (lateNightActivity > activities.length * 0.2) {
-            suggestions.push("You code late at night frequently. Research shows coding between 9AM-12PM improves code quality by 15%. Consider adjusting your schedule for peak performance.");
-        }
-        // Keystroke efficiency
-        const totalKeystrokes = activities.reduce((sum, a) => sum + (a.keystrokes || 0), 0);
-        const keystrokesPerCommand = totalCommands > 0 ? totalKeystrokes / totalCommands : 0;
-        if (keystrokesPerCommand > 20) {
-            suggestions.push(`You average ${Math.round(keystrokesPerCommand)} keystrokes per command. Learning multi-cursor editing and advanced snippets could reduce typing by 50%.`);
-        }
-        // Productivity momentum
-        const recentActivities = activities.filter(a => Date.now() - a.timestamp < 24 * 60 * 60 * 1000);
-        if (recentActivities.length > 200) {
-            suggestions.push("You're on fire! 🔥 Your recent activity shows exceptional momentum. Keep this energy up and you'll hit your goals even faster.");
-        }
-        // Default positive reinforcement
-        if (suggestions.length === 0) {
-            const totalFiles = Object.keys(fileCounts).length;
-            if (totalFiles > 10) {
-                suggestions.push(`Great work! You're maintaining a balanced workflow across ${totalFiles} files. Keep exploring new VS Code features to level up your productivity.`);
-            }
-            else if (totalCommands > 50) {
-                suggestions.push(`Solid progress with ${totalCommands} commands executed. You're building great coding habits. Consider setting up code snippets to accelerate repetitive tasks.`);
-            }
-            else {
-                suggestions.push("You're off to a great start! Keep coding consistently and check back for personalized insights as your data grows.");
-            }
-        }
-        // Limit to top 5 most relevant suggestions
-        return suggestions.slice(0, 5);
     }
 }
 exports.AIAnalyzer = AIAnalyzer;

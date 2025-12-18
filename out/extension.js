@@ -41,6 +41,7 @@ const aiAnalyzer_1 = require("./aiAnalyzer");
 const visualization_1 = require("./visualization");
 const gamification_1 = require("./gamification");
 const backendServices_1 = require("./backendServices");
+const geminiService_1 = require("./geminiService");
 const child_process_1 = require("child_process");
 const path = __importStar(require("path"));
 // TODO: Fix React component compilation issues
@@ -91,74 +92,6 @@ function activate(context) {
             vscode.window.showErrorMessage(`Error generating report: ${error}`);
         }
     });
-    const toggleTrackingCommand = vscode.commands.registerCommand('codeflow.toggleTracking', async () => {
-        const config = vscode.workspace.getConfiguration('codeflow');
-        const currentValue = config.get('enabled', true);
-        await config.update('enabled', !currentValue, vscode.ConfigurationTarget.Global);
-        const status = !currentValue ? 'enabled' : 'disabled';
-        vscode.window.showInformationMessage(`CodeFlow tracking ${status}`);
-    });
-    const showBadgesCommand = vscode.commands.registerCommand('codeflow.showBadges', () => {
-        const earnedBadges = gamificationSystem.getEarnedBadges();
-        const allBadges = gamificationSystem.getAllBadges();
-        const progress = gamificationSystem.getUserProgress();
-        // Create a quick pick to show badges
-        const items = allBadges.map(badge => {
-            const isEarned = earnedBadges.some(b => b.id === badge.id);
-            return {
-                label: `${badge.icon} ${badge.name}`,
-                description: badge.description,
-                detail: isEarned ? 'Earned' : 'Not earned yet',
-                picked: isEarned
-            };
-        });
-        vscode.window.showQuickPick(items, {
-            placeHolder: `Level ${progress.level} Developer - ${progress.points} points`,
-            canPickMany: false
-        });
-    });
-    const enableCloudSyncCommand = vscode.commands.registerCommand('codeflow.enableCloudSync', async () => {
-        try {
-            await backendServices.authenticate();
-            vscode.window.showInformationMessage('Cloud sync enabled successfully!');
-        }
-        catch (error) {
-            vscode.window.showErrorMessage(`Failed to enable cloud sync: ${error}`);
-        }
-    });
-    const configureAPICommand = vscode.commands.registerCommand('codeflow.configureAPI', async () => {
-        const config = vscode.workspace.getConfiguration('codeflow');
-        // Ask for API endpoint
-        const endpoint = await vscode.window.showInputBox({
-            prompt: 'Enter the API endpoint for AI analysis',
-            value: config.get('apiEndpoint', ''),
-            placeHolder: 'https://api.example.com/analyze'
-        });
-        if (endpoint !== undefined) {
-            await config.update('apiEndpoint', endpoint, vscode.ConfigurationTarget.Global);
-        }
-        // Ask for API key
-        const apiKey = await vscode.window.showInputBox({
-            prompt: 'Enter your API key',
-            value: config.get('apiKey', ''),
-            password: true
-        });
-        if (apiKey !== undefined) {
-            await config.update('apiKey', apiKey, vscode.ConfigurationTarget.Global);
-        }
-        // Ask if external API should be used
-        const useExternalAPI = await vscode.window.showQuickPick(['Yes', 'No'], {
-            placeHolder: 'Use external API for AI analysis?'
-        });
-        if (useExternalAPI === 'Yes') {
-            await config.update('useExternalAPI', true, vscode.ConfigurationTarget.Global);
-            vscode.window.showInformationMessage('External API configured successfully!');
-        }
-        else if (useExternalAPI === 'No') {
-            await config.update('useExternalAPI', false, vscode.ConfigurationTarget.Global);
-            vscode.window.showInformationMessage('Using local analysis only.');
-        }
-    });
     const trainTFModelCommand = vscode.commands.registerCommand('codeflow.trainTFModel', async () => {
         try {
             const tfPath = path.join(context.extensionPath, 'ml', 'tfjs');
@@ -192,108 +125,110 @@ function activate(context) {
             vscode.window.showErrorMessage(`Error training TensorFlow.js model: ${error}`);
         }
     });
-    const setGoalCommand = vscode.commands.registerCommand('codeflow.setGoal', async () => {
-        const goalType = await vscode.window.showQuickPick([
-            'Daily Productivity Score',
-            'Weekly Coding Hours',
-            'Languages to Learn',
-            'Badges to Earn'
-        ], {
-            placeHolder: 'Select a goal type'
-        });
-        if (!goalType) {
-            return;
-        }
-        const goalValue = await vscode.window.showInputBox({
-            prompt: `Enter your target for ${goalType}`,
-            placeHolder: 'e.g., 80 for score, 20 for hours, 5 for languages',
-            validateInput: (value) => {
-                return isNaN(Number(value)) ? 'Please enter a valid number' : null;
-            }
-        });
-        if (goalValue) {
-            const config = vscode.workspace.getConfiguration('codeflow');
-            const goals = config.get('goals', {});
-            goals[goalType] = Number(goalValue);
-            await config.update('goals', goals, vscode.ConfigurationTarget.Global);
-            vscode.window.showInformationMessage(`✅ Goal set: ${goalType} = ${goalValue}`);
-        }
-    });
-    const viewStatsCommand = vscode.commands.registerCommand('codeflow.viewStats', async () => {
-        const period = await vscode.window.showQuickPick([
-            'Today',
-            'Last 7 Days',
-            'Last 30 Days',
-            'All Time'
-        ], {
-            placeHolder: 'Select time period'
-        });
-        if (!period) {
-            return;
-        }
-        const days = period === 'Today' ? 1 :
-            period === 'Last 7 Days' ? 7 :
-                period === 'Last 30 Days' ? 30 : 365;
+    const testGeminiCommand = vscode.commands.registerCommand('codeflow.testGeminiConnection', async () => {
         try {
-            const insight = await aiAnalyzer.analyzeData(days);
-            visualizationPanel.show(insight);
-        }
-        catch (error) {
-            vscode.window.showErrorMessage(`Error viewing stats: ${error}`);
-        }
-    });
-    const comparePerformanceCommand = vscode.commands.registerCommand('codeflow.comparePerformance', async () => {
-        try {
-            const thisWeek = await aiAnalyzer.analyzeData(7);
-            const lastWeek = await aiAnalyzer.analyzeData(14);
-            const scoreDiff = thisWeek.productivityScore - lastWeek.productivityScore;
-            const emoji = scoreDiff > 0 ? '📈' : scoreDiff < 0 ? '📉' : '➡️';
-            const trend = scoreDiff > 0 ? 'improved' : scoreDiff < 0 ? 'decreased' : 'remained stable';
-            vscode.window.showInformationMessage(`${emoji} Your productivity has ${trend} by ${Math.abs(scoreDiff).toFixed(1)} points compared to last week!`);
-        }
-        catch (error) {
-            vscode.window.showErrorMessage(`Error comparing performance: ${error}`);
-        }
-    });
-    const exportDataCommand = vscode.commands.registerCommand('codeflow.exportData', async () => {
-        try {
-            const insight = await aiAnalyzer.analyzeData(30);
-            const progress = gamificationSystem.getUserProgress();
-            const badges = gamificationSystem.getEarnedBadges();
-            const exportData = {
-                generatedAt: new Date().toISOString(),
-                productivity: insight,
-                gamification: {
-                    progress,
-                    badges
+            const geminiService = new geminiService_1.GeminiService();
+            // Show progress notification
+            await vscode.window.withProgress({
+                location: vscode.ProgressLocation.Notification,
+                title: "Testing Gemini AI Connection",
+                cancellable: false
+            }, async (progress) => {
+                progress.report({ message: "Connecting to Gemini API..." });
+                const result = await geminiService.testConnection();
+                if (result.success) {
+                    vscode.window.showInformationMessage(`✅ ${result.message}`, 'View Settings').then(selection => {
+                        if (selection === 'View Settings') {
+                            vscode.commands.executeCommand('workbench.action.openSettings', 'codeflow');
+                        }
+                    });
                 }
-            };
-            const saveUri = await vscode.window.showSaveDialog({
-                filters: {
-                    'JSON': ['json']
-                },
-                defaultUri: vscode.Uri.file(`codeflow-export-${new Date().toISOString().split('T')[0]}.json`)
+                else {
+                    const action = await vscode.window.showErrorMessage(`❌ ${result.message}`, 'Open Settings', 'Get API Key');
+                    if (action === 'Open Settings') {
+                        vscode.commands.executeCommand('workbench.action.openSettings', 'codeflow.gemini');
+                    }
+                    else if (action === 'Get API Key') {
+                        vscode.env.openExternal(vscode.Uri.parse('https://makersuite.google.com/app/apikey'));
+                    }
+                }
             });
-            if (saveUri) {
-                const fs = require('fs');
-                fs.writeFileSync(saveUri.fsPath, JSON.stringify(exportData, null, 2));
-                vscode.window.showInformationMessage('📥 Data exported successfully!');
-            }
         }
         catch (error) {
-            vscode.window.showErrorMessage(`Error exporting data: ${error}`);
+            console.error('Gemini test error:', error);
+            vscode.window.showErrorMessage(`Error testing Gemini connection: ${error}`);
         }
-    });
-    // Register auth-related commands
-    const loginCommand = vscode.commands.registerCommand('codeflow.login', async () => {
-        // Show login UI
-        vscode.window.showInformationMessage('Login UI will be displayed here');
-    });
-    const logoutCommand = vscode.commands.registerCommand('codeflow.logout', async () => {
-        await backendServicesModule.getAuthService().logout();
     });
     const upgradeToProCommand = vscode.commands.registerCommand('codeflow.upgradeToPro', async () => {
-        await backendServicesModule.getAuthService().upgradeToPro();
+        try {
+            // Create a new webview panel to display the Pro Plan page
+            const panel = vscode.window.createWebviewPanel('codeflowProPlan', 'CodeFlow Pro Plan', vscode.ViewColumn.One, {
+                enableScripts: true,
+                localResourceRoots: [
+                    vscode.Uri.joinPath(context.extensionUri, 'media'),
+                    vscode.Uri.joinPath(context.extensionUri, 'icon')
+                ]
+            });
+            // Set the panel icon
+            panel.iconPath = vscode.Uri.joinPath(context.extensionUri, 'icon', '2.png');
+            // Read the pro-plan.html file
+            const fs = require('fs');
+            const proPlanPath = path.join(context.extensionPath, 'media', 'pro-plan.html');
+            let htmlContent = fs.readFileSync(proPlanPath, 'utf8');
+            // Update resource URIs to work in the webview
+            const logoUri = panel.webview.asWebviewUri(vscode.Uri.joinPath(context.extensionUri, 'icon', '2.png'));
+            // Replace relative paths with webview URIs
+            htmlContent = htmlContent.replace(/src="\.\.\/icon\/2\.png"/g, `src="${logoUri}"`);
+            panel.webview.html = htmlContent;
+        }
+        catch (error) {
+            console.error('Error opening Pro Plan:', error);
+            vscode.window.showErrorMessage(`Error opening Pro Plan: ${error}`);
+        }
+    });
+    const resetExtensionCommand = vscode.commands.registerCommand('codeflow.resetExtension', async () => {
+        const choice = await vscode.window.showWarningMessage('This will reset CodeFlow to a fresh state, deleting all tracked data, badges, and settings. This cannot be undone. Continue?', { modal: true }, 'Reset Extension', 'Cancel');
+        if (choice !== 'Reset Extension') {
+            return;
+        }
+        try {
+            await vscode.window.withProgress({
+                location: vscode.ProgressLocation.Notification,
+                title: "Resetting CodeFlow Extension",
+                cancellable: false
+            }, async (progress) => {
+                progress.report({ message: "Clearing stored data..." });
+                // Clear all globalState keys
+                const keys = context.globalState.keys();
+                for (const key of keys) {
+                    await context.globalState.update(key, undefined);
+                }
+                // Clear globalStorage directory
+                const fs = require('fs');
+                const storagePath = context.globalStorageUri.fsPath;
+                if (fs.existsSync(storagePath)) {
+                    const files = fs.readdirSync(storagePath);
+                    for (const file of files) {
+                        const filePath = path.join(storagePath, file);
+                        try {
+                            fs.unlinkSync(filePath);
+                        }
+                        catch (err) {
+                            console.error(`Error deleting file ${filePath}:`, err);
+                        }
+                    }
+                }
+                progress.report({ message: "Reset complete!" });
+            });
+            const reload = await vscode.window.showInformationMessage('CodeFlow has been reset successfully. Reload VS Code to complete the reset.', 'Reload Now', 'Later');
+            if (reload === 'Reload Now') {
+                await vscode.commands.executeCommand('workbench.action.reloadWindow');
+            }
+        }
+        catch (error) {
+            console.error('Error resetting extension:', error);
+            vscode.window.showErrorMessage(`Error resetting extension: ${error}`);
+        }
     });
     // Register status bar item (CodeFlow icon)
     const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
@@ -327,7 +262,7 @@ function activate(context) {
         }
     });
     // Add to subscriptions
-    context.subscriptions.push(dataCollector, backendServicesModule, showReportCommand, toggleTrackingCommand, showBadgesCommand, enableCloudSyncCommand, configureAPICommand, trainTFModelCommand, setGoalCommand, viewStatsCommand, comparePerformanceCommand, exportDataCommand, loginCommand, logoutCommand, upgradeToProCommand, statusBarItem, configWatcher);
+    context.subscriptions.push(dataCollector, backendServicesModule, showReportCommand, trainTFModelCommand, testGeminiCommand, upgradeToProCommand, resetExtensionCommand, statusBarItem, configWatcher);
     // Check for new badges periodically
     setInterval(() => {
         const activities = gamificationSystem.getActivitiesForLastWeek();
