@@ -57,7 +57,6 @@ class VisualizationPanel {
                 enableScripts: true,
                 localResourceRoots: [
                     vscode.Uri.joinPath(this.context.extensionUri, 'media'),
-                    vscode.Uri.joinPath(this.context.extensionUri, 'node_modules'),
                     vscode.Uri.joinPath(this.context.extensionUri, 'icon')
                 ]
             });
@@ -101,9 +100,9 @@ class VisualizationPanel {
         }
     }
     _getHtmlForWebview(webview, insight) {
-        const chartJsScriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, 'node_modules', 'chart.js', 'dist', 'chart.umd.js'));
-        const jsPdfScriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, 'node_modules', 'jspdf', 'dist', 'jspdf.umd.min.js'));
-        const html2canvasScriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, 'node_modules', 'html2canvas', 'dist', 'html2canvas.min.js'));
+        const chartJsScriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, 'media', 'chart.umd.js'));
+        const jsPdfScriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, 'media', 'jspdf.umd.min.js'));
+        const html2canvasScriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, 'media', 'html2canvas.min.js'));
         const styleUri = webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, 'media', 'styles.css'));
         const logoUri = webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, 'icon', '2.png'));
         const nonce = getNonce();

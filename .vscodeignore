@@ -1,6 +1,8 @@
+# Development files
 .vscode/**
 .vscode-test/**
 src/**
+out/**
 .gitignore
 .yarnrc
 vsc-extension-quickstart.md
@@ -9,11 +11,23 @@ vsc-extension-quickstart.md
 **/*.map
 **/*.ts
 **/.vscode-test.*
-node_modules/**
-ml/**
 .git/**
 .github/**
-*.md
-!README.md
 test/**
 *.vsix
+esbuild.js
+
+# All node_modules (bundled by esbuild)
+node_modules/**
+
+# Include ML files needed at runtime
+ml/data/**
+!ml/data/training_data.json
+!ml/models/**
+!ml/tfjs/**
+
+# Exclude most markdown except essential ones
+*.md
+!README.md
+!GEMINI_*.md
+!FEATURES.md

@@ -31,7 +31,6 @@ export class VisualizationPanel {
                     enableScripts: true,
                     localResourceRoots: [
                         vscode.Uri.joinPath(this.context.extensionUri, 'media'),
-                        vscode.Uri.joinPath(this.context.extensionUri, 'node_modules'),
                         vscode.Uri.joinPath(this.context.extensionUri, 'icon')
                     ]
                 }
@@ -79,15 +78,15 @@ export class VisualizationPanel {
 
     private _getHtmlForWebview(webview: vscode.Webview, insight: ProductivityInsight): string {
         const chartJsScriptUri = webview.asWebviewUri(
-            vscode.Uri.joinPath(this.context.extensionUri, 'node_modules', 'chart.js', 'dist', 'chart.umd.js')
+            vscode.Uri.joinPath(this.context.extensionUri, 'media', 'chart.umd.js')
         );
 
         const jsPdfScriptUri = webview.asWebviewUri(
-            vscode.Uri.joinPath(this.context.extensionUri, 'node_modules', 'jspdf', 'dist', 'jspdf.umd.min.js')
+            vscode.Uri.joinPath(this.context.extensionUri, 'media', 'jspdf.umd.min.js')
         );
 
         const html2canvasScriptUri = webview.asWebviewUri(
-            vscode.Uri.joinPath(this.context.extensionUri, 'node_modules', 'html2canvas', 'dist', 'html2canvas.min.js')
+            vscode.Uri.joinPath(this.context.extensionUri, 'media', 'html2canvas.min.js')
         );
 
         const styleUri = webview.asWebviewUri(
