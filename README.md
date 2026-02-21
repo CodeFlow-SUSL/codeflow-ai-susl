@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://raw.githubusercontent.com/CodeFlow-SUSL/codeflow-ai-susl/main/icon/2.png" alt="CodeFlow AI Logo" width="100"/>
+<img src="icon/2.png" alt="CodeFlow AI Logo" width="100"/>
 
 # CodeFlow AI
 
@@ -51,23 +51,23 @@ The weekly report includes:
 ### 📊 Weekly Report Dashboard
 > View your productivity metrics at a glance
 
-<img src="https://raw.githubusercontent.com/CodeFlow-SUSL/codeflow-ai-susl/main/media/report.png" alt="report" width="full"/>
+<img src="media/report.png" alt="report" width="800"/>
 
 
 ### 🏆 Achievement Badges
 > Unlock badges as you code
 
-<img src="https://raw.githubusercontent.com/CodeFlow-SUSL/codeflow-ai-susl/main/media/badges.png" alt="badges" width="full"/>
+<img src="media/badges.png" alt="badges" width="800"/>
 
 
 ### 📈 Activity Visualization
 > Beautiful charts and analytics
 
-<img src="https://raw.githubusercontent.com/CodeFlow-SUSL/codeflow-ai-susl/main/media/chart-1.png" alt="chart" width="full"/>
+<img src="media/chart-1.png" alt="chart" width="800"/>
 
 ---
 
-<img src="https://raw.githubusercontent.com/CodeFlow-SUSL/codeflow-ai-susl/main/media/chart-2.png" alt="chart" width="full"/>
+<img src="media/chart-2.png" alt="chart" width="800"/>
 
 
 ## 🎯 Features
