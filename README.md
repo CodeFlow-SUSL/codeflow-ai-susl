@@ -14,6 +14,20 @@ Transform your coding habits with intelligent insights, personalized recommendat
 
 </div>
 
+> [!IMPORTANT]
+> ### 🔒 **Privacy Notice** 🔒
+> 
+> 📝 **Data Collection:** When using the CodeFlow AI extension, your source code activity will be **captured and analyzed** to provide:
+> - 📊 Productivity insights and metrics
+> - 🤖 AI-powered recommendations
+> - 📈 Performance trends and analytics
+> 
+> 🏠 **Local Processing:** All data is processed **locally on your machine** by default
+> 
+> ☁️ **External Services:** Optional external AI services (Google Gemini) can be configured
+> 
+> ⚙️ **Learn More:** Review the [Configuration](#️-configuration) section to understand how your data is handled
+
 ## 🎮 Usage
 
 ### 📊 Available Commands
